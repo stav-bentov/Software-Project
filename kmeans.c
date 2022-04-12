@@ -5,7 +5,6 @@
 #include <float.h>
 #include <ctype.h>
 
-/*#define EPSILON = 0.001*/
 static const double EPSILON=0.001;
 
 int check_euclidean_norm(double **Centroids ,int dimension, int K)
