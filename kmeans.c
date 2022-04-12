@@ -84,11 +84,10 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     firstLine=1;
     counter=0;
     ifp= fopen(input_filename,"r");
-    printf("%s \n", input_filename);
+
     if (ifp == NULL)
     {
-        printf("is in input \n");
-        printf("Error opening the file %s \n", input_filename);
+        printf("An Error Has Occurred");
         return 1;
     }
 
@@ -118,14 +117,28 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     rewind(ifp);
     Datapoints=malloc((sizeof(double*))*N);
     Centroids=malloc((sizeof(double*))*K);
+
+    if(Datapoints == NULL || Centroids == NULL){
+        printf("An Error Has Occurred");
+        return 1;
+    }
+
     for(i=0;i<N;i++)
     {
         /* last cell contains the datapoint's cluster*/
         Datapoints[i]=malloc((sizeof(double))*(dimension+1));
+        if(Datapoints[i] == NULL){
+            printf("An Error Has Occurred");
+            return 1;
+        }
         if(i<K)
         {
             /* last call contains number of datapoints assigned to centroid's cluster*/
             Centroids[i]=malloc((sizeof(double))*(dimension+1));
+            if(Centroids[i] == NULL){
+                printf("An Error Has Occurred");
+                return 1;
+            }
         }
 
         for(j=0;j<dimension;j++)
@@ -191,7 +204,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     ifp= fopen(output_filename,"w");
     if (ifp == NULL)
     {
-        printf("Error opening the file %s", output_filename);
+        printf("An Error Has Occurred");
         return 1;
     }
 
@@ -317,14 +330,12 @@ int main(int argc, char const *argv[])
         }
     }
 
-    printf("%d",argc);
-    K= atoi(argv[1]);
+    K = atoi(argv[1]);
     if(argc==5)
     {
         max_iter=atoi(argv[2]);
-        i=kMeans(K,max_iter,argv[3],argv[4]);
+        return kMeans(K,max_iter,argv[3],argv[4]);
     }
-    i=kMeans(K,max_iter,argv[2],argv[3]);
-    printf("code returned= %d",i);
-    return 0;
+
+    return kMeans(K,max_iter,argv[2],argv[3]);
 }
