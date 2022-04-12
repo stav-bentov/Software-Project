@@ -1,6 +1,10 @@
 import math
+import sys
 
-def kMeans(K, input_filename, output_filename, max_iter = 200):
+from pip import main
+
+def kMeans(K, max_iter,input_filename, output_filename):
+
     fileOpener = open(input_filename, "r")
     
     data_points_array = [] # saves the datapoint x1, ... , xN (array DxN)
@@ -92,4 +96,35 @@ def div_vectors(mean, clusterSize):
         for i in range(len(mean)):
             mean[i] = mean[i] / clusterSize
 
-kMeans(15, "input_3.txt", "output_3.txt")
+
+def main(argv):
+    max_iter=200
+    isValid=True
+    argLen=len(argv)
+    if(argLen<4 or argLen>5):
+        print("Inavlid Input!")
+        return 1
+    
+    for i in range(argLen):
+        if(argLen==5):
+            if(i==1 or i==2):
+                isValid=argv[i].isnumeric()
+            if(i==3 or i==4):
+                isValid=(argv[i][-4:]==".txt")
+        else:
+            if(i==1):
+                isValid=argv[i].isnumeric()
+            if(i==2 or i==3):
+                isValid=(argv[i][-4:]==".txt")
+        if(isValid==False):
+            print("Inavlid Input!")
+            return 1
+    
+    K=(int)(argv[1])
+    if(argLen==5):
+        max_iter=(int)(argv[2])
+        return kMeans(K,max_iter,argv[3],argv[4])
+    return kMeans(K,max_iter,argv[2],argv[3])
+
+if __name__ == "__main__":
+    main(sys.argv)
