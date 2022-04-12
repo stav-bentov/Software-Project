@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <sys/stat.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <ctype.h>
 
 /*#define EPSILON = 0.001*/
 static const double EPSILON=0.001;
@@ -41,26 +41,39 @@ int find_cluster(double **Centroids,double *Datapoint,int dimension,int K)
         if(minSum>=sum)
         {
             minSum=sum;
-            
+
             /* cluster number i+1 because in cell number i*/
             cluster=i+1;
         }
     }
-    
+
     return cluster;
 }
 
+void free_memory(double ** Centroids,double **Datapoints,int K,int N)
+{
+    int i;
+    for(i=0;i<N;i++)
+    {
+        if(i<K)
+        {
+            free(Centroids[i]);
+        }
+        free(Datapoints[i]);
+    }
+    free(Datapoints);
+    free(Centroids);
+}
+
 /* make default max_iter=200*/
-int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
+int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename)
 {
     FILE *ifp=NULL;
     char c;
-    /*char *line;*/
     int N,dimension;
     int firstLine;
     int i,j,counter;
     double corr;
-    /*double *ptr;*/
     double **Datapoints,**Centroids;
     int cluster;
 
@@ -69,12 +82,14 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
     dimension=1;
     N=0;
     firstLine=1;
+    counter=0;
     ifp= fopen(input_filename,"r");
-
+    printf("%s \n", input_filename);
     if (ifp == NULL)
     {
-        printf("Error opening the file %s", input_filename);
-        return -1;
+        printf("is in input \n");
+        printf("Error opening the file %s \n", input_filename);
+        return 1;
     }
 
     while((c=fgetc(ifp))!=EOF)
@@ -87,13 +102,18 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
             N++;
             if(firstLine)
             {
-                printf("N= %d",N);
                 firstLine=0;
             }
         }
     }
-    printf("N= %d",N);
-    printf("d= %d",dimension);
+
+
+    if(K>N || K == 0)
+    {
+        printf("Invalid Input!");
+        return 1;
+    }
+
 
     rewind(ifp);
     Datapoints=malloc((sizeof(double*))*N);
@@ -107,7 +127,7 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
             /* last call contains number of datapoints assigned to centroid's cluster*/
             Centroids[i]=malloc((sizeof(double))*(dimension+1));
         }
-        
+
         for(j=0;j<dimension;j++)
         {
             if(fscanf(ifp,"%lf",&corr)==1)
@@ -156,7 +176,7 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
                 Centroids[cluster-1][j]+=Datapoints[i][j];
             }
         }
-    
+
         for(i=0;i<K;i++)
         {
             for(j=0;j<dimension;j++)
@@ -172,10 +192,10 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
     if (ifp == NULL)
     {
         printf("Error opening the file %s", output_filename);
-        exit(-1);
+        return 1;
     }
 
-    for(i=0;i<K;i++)/*kmeans*/
+    for(i=0;i<K;i++)
     {
         for(j=0;j<dimension;j++)
         {
@@ -190,7 +210,121 @@ int kMeans(int K, char *input_filename, char *output_filename, int max_iter)
     }
 
     fclose(ifp);
+
+    free_memory(Centroids,Datapoints,K,N);
+
+    return 0;
+}
+
+int isNumber(const char *argument)
+{
+    int i;
+    char c;
+    i=0;
+    c=argument[0];
+    while (c!='\0')
+    {
+        i++;
+        if(!isdigit(c))
+            return 0;
+        c=argument[i];
+    }
     return 1;
 }
 
+int isTxt(const char *argument)
+{
+    int i,j;
+    char c;
+    char strArg[4];
 
+    char str[] = ".txt";
+    i=0;
+    j=0;
+    c=argument[0];
+
+    while (c!='\0')
+    {
+        i++;
+        c=argument[i];
+    }
+    if(i<5)
+    {
+        return 0;
+    }
+
+    i=i-4;
+
+    while(j<=4)
+    {
+        c=argument[i+j];
+        strArg[j]=c;
+        j++;
+    }
+
+
+    if(strcmp(strArg,str))
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int main(int argc, char const *argv[])
+{
+
+    int i,isValid,K,max_iter;
+    max_iter=200;
+    isValid=1;
+
+    /* invalid number of arguments*/
+    if(argc<4 || argc>5)
+    {
+        printf("Invalid Input!");
+        return 1;
+    }
+
+    for(i=1;i<argc;i++)
+    {
+        if(argc==5)
+        {
+            if(i==1 || i==2)
+            {
+                isValid=isNumber(argv[i]);
+            }
+            if(i==3 || i==4)
+            {
+                isValid=isTxt(argv[i]);
+            }
+        }
+        else
+        {
+            if(i==1)
+            {
+                isValid=isNumber(argv[i]);
+            }
+            if(i==2 || i==3)
+            {
+                isValid=isTxt(argv[i]);
+            }
+        }
+
+        if(!isValid)
+        {
+            printf("Invalid Input!");
+            return 1;
+        }
+    }
+
+    printf("%d",argc);
+    K= atoi(argv[1]);
+    if(argc==5)
+    {
+        max_iter=atoi(argv[2]);
+        i=kMeans(K,max_iter,argv[3],argv[4]);
+    }
+    i=kMeans(K,max_iter,argv[2],argv[3]);
+    printf("code returned= %d",i);
+    return 0;
+}
