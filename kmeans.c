@@ -34,22 +34,22 @@ int main(int argc, char const *argv[])
         {
             if(i==1 || i==2)
             {
-                isValid=isNumber(argv[i]);
+                isValid=is_number(argv[i]);
             }
             if(i==3 || i==4)
             {
-                isValid=isTxt(argv[i]);
+                isValid=is_txt(argv[i]);
             }
         }
         else
         {
             if(i==1)
             {
-                isValid=isNumber(argv[i]);
+                isValid=is_number(argv[i]);
             }
             if(i==2 || i==3)
             {
-                isValid=isTxt(argv[i]);
+                isValid=is_txt(argv[i]);
             }
         }
 
