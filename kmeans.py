@@ -3,6 +3,8 @@ import sys
 
 from pip import main
 
+EPSILON=0.001
+
 def kMeans(K, max_iter,input_filename, output_filename):
 
     fileOpener = open(input_filename, "r")
@@ -24,20 +26,28 @@ def kMeans(K, max_iter,input_filename, output_filename):
     fileOpener.close()
     ### end of while loop
 
+    N=len(data_points_array)
+
+    if(K>N or K <= 0):
+        print("Invalid Input!")
+        sys.exit()
+
+    dimension=len(data_points_array[0])
+
     # for each 0<=i<N data_points_cluster[i]=S for s is the cluster of xi
-    data_points_cluster = [0 for i in range(len(data_points_array))]
+    data_points_cluster = [0 for i in range(N)]
     counter = 0
 
     # while euclidean norm is larger then x and number of iteration is less then max_iter
-    while (check_euclidean_norm(kMeans_array, 0.001)) and (max_iter > counter) :
+    while (check_euclidean_norm(kMeans_array)) and (max_iter > counter) :
         # calculate cluster for each datapoint
-        for i in range(len(data_points_array)):
+        for i in range(N):
             # update each datapoints's cluster
             data_points_cluster[i] = find_cluster(kMeans_array, data_points_array[i]) # update cluster array
             # updtae number of datapoints that belongs to each cluster 
             kMeans_size_array[data_points_cluster[i] - 1] += 1 # update cluster's size
 
-        kMeans_array = [[float(0) for i in range (len(data_points_array[0]))] for j in range(K)]
+        kMeans_array = [[float(0) for i in range (dimension)] for j in range(K)]
         
         # calculate updated clusters
         for i in range(len(data_points_array)):
@@ -58,14 +68,14 @@ def kMeans(K, max_iter,input_filename, output_filename):
             else:
                 fileOpener.write(str(mean[i]) + "\n")
 
-def check_euclidean_norm(kMeans_array, epsilon):
+def check_euclidean_norm(kMeans_array):
     for mean in kMeans_array:
         sum = 0
         for i in mean:
             sum += i**2
         # if there exist a centroid that changes more then epsilon- return true 
         # there is no convergence yet
-        if math.sqrt(sum) >= epsilon:
+        if math.sqrt(sum) >= EPSILON:
             return True
     return False
 
@@ -92,7 +102,7 @@ def add_vectors(mean, data_point):
         mean[i] += data_point[i]
 
 def div_vectors(mean, clusterSize):
-    if clusterSize != 0: ##todo check
+    if clusterSize != 0:
         for i in range(len(mean)):
             mean[i] = mean[i] / clusterSize
 
@@ -103,7 +113,7 @@ def main(argv):
     argLen=len(argv)
     if(argLen<4 or argLen>5):
         print("Inavlid Input!")
-        return 1
+        sys.exit()
     
     for i in range(argLen):
         if(argLen==5):
@@ -118,8 +128,12 @@ def main(argv):
                 isValid=(argv[i][-4:]==".txt")
         if(isValid==False):
             print("Inavlid Input!")
-            return 1
+        sys.exit()
     
+    if(max_iter<=0):
+        print("Inavlid Input!")
+        sys.exit()
+
     K=(int)(argv[1])
     if(argLen==5):
         max_iter=(int)(argv[2])

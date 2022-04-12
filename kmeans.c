@@ -5,7 +5,71 @@
 #include <float.h>
 #include <ctype.h>
 
+int check_euclidean_norm(double **Centroids ,int dimension, int K);
+int find_cluster(double **Centroids,double *Datapoint,int dimension,int K);
+void free_memory(double ** Centroids,double **Datapoints,int K,int N);
+int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename);
+int is_number(const char *argument);
+int is_txt(const char *argument);
+
 static const double EPSILON=0.001;
+
+int main(int argc, char const *argv[])
+{
+
+    int i,isValid,K,max_iter;
+    max_iter=200;
+    isValid=1;
+
+    /* invalid number of arguments*/
+    if(argc<4 || argc>5)
+    {
+        printf("Invalid Input!");
+        return 1;
+    }
+
+    for(i=1;i<argc;i++)
+    {
+        if(argc==5)
+        {
+            if(i==1 || i==2)
+            {
+                isValid=isNumber(argv[i]);
+            }
+            if(i==3 || i==4)
+            {
+                isValid=isTxt(argv[i]);
+            }
+        }
+        else
+        {
+            if(i==1)
+            {
+                isValid=isNumber(argv[i]);
+            }
+            if(i==2 || i==3)
+            {
+                isValid=isTxt(argv[i]);
+            }
+        }
+
+        if(!isValid)
+        {
+            printf("Invalid Input!");
+            return 1;
+        }
+    }
+
+    K = atoi(argv[1]);
+    if(argc==5)
+    {
+        max_iter=atoi(argv[2]);
+        return kMeans(K,max_iter,argv[3],argv[4]);
+    }
+
+    return kMeans(K,max_iter,argv[2],argv[3]);
+}
+
 
 int check_euclidean_norm(double **Centroids ,int dimension, int K)
 {
@@ -64,7 +128,6 @@ void free_memory(double ** Centroids,double **Datapoints,int K,int N)
     free(Centroids);
 }
 
-/* make default max_iter=200*/
 int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename)
 {
     FILE *ifp=NULL;
@@ -75,6 +138,12 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     double corr;
     double **Datapoints,**Centroids;
     int cluster;
+
+    if(max_iter<=0)
+    {
+        printf("Invalid Input!");
+        return 1;
+    }
 
     i=0;
     j=0;
@@ -106,7 +175,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     }
 
 
-    if(K>N || K == 0)
+    if(K>N || K <= 0)
     {
         printf("Invalid Input!");
         return 1;
@@ -228,7 +297,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     return 0;
 }
 
-int isNumber(const char *argument)
+int is_number(const char *argument)
 {
     int i;
     char c;
@@ -244,7 +313,7 @@ int isNumber(const char *argument)
     return 1;
 }
 
-int isTxt(const char *argument)
+int is_txt(const char *argument)
 {
     int i,j;
     char c;
@@ -281,60 +350,4 @@ int isTxt(const char *argument)
     }
 
     return 1;
-}
-
-int main(int argc, char const *argv[])
-{
-
-    int i,isValid,K,max_iter;
-    max_iter=200;
-    isValid=1;
-
-    /* invalid number of arguments*/
-    if(argc<4 || argc>5)
-    {
-        printf("Invalid Input!");
-        return 1;
-    }
-
-    for(i=1;i<argc;i++)
-    {
-        if(argc==5)
-        {
-            if(i==1 || i==2)
-            {
-                isValid=isNumber(argv[i]);
-            }
-            if(i==3 || i==4)
-            {
-                isValid=isTxt(argv[i]);
-            }
-        }
-        else
-        {
-            if(i==1)
-            {
-                isValid=isNumber(argv[i]);
-            }
-            if(i==2 || i==3)
-            {
-                isValid=isTxt(argv[i]);
-            }
-        }
-
-        if(!isValid)
-        {
-            printf("Invalid Input!");
-            return 1;
-        }
-    }
-
-    K = atoi(argv[1]);
-    if(argc==5)
-    {
-        max_iter=atoi(argv[2]);
-        return kMeans(K,max_iter,argv[3],argv[4]);
-    }
-
-    return kMeans(K,max_iter,argv[2],argv[3]);
 }
