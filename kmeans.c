@@ -5,10 +5,11 @@
 #include <float.h>
 #include <ctype.h>
 
-int check_euclidean_norm(double **Centroids ,int dimension, int K);
+int check_euclidean_norm(double **newCentroids ,double **oldCentroids,int dimension, int K);
 int find_cluster(double **Centroids,double *Datapoint,int dimension,int K);
 void free_memory(double ** Centroids,double **Datapoints,int K,int N);
 int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename);
+void updateOldCentroid(double **newCentroids ,double **oldCentroids,int dimension, int K);
 int is_number(const char *argument);
 int is_txt(const char *argument);
 
@@ -27,6 +28,7 @@ int main(int argc, char const *argv[])
         printf("Invalid Input!");
         return 1;
     }
+
 
     for(i=1;i<argc;i++)
     {
@@ -71,7 +73,7 @@ int main(int argc, char const *argv[])
 }
 
 
-int check_euclidean_norm(double **Centroids ,int dimension, int K)
+int check_euclidean_norm(double **newCentroids ,double **oldCentroids,int dimension, int K)
 {
     int i,j;
     double sum;
@@ -80,12 +82,13 @@ int check_euclidean_norm(double **Centroids ,int dimension, int K)
         sum=0;
         for(j=0;j<dimension;j++)
         {
-            sum+=pow(Centroids[i][j],2);
+            sum+=pow(newCentroids[i][j]-oldCentroids[i][j],2);
         }
         if(sqrt(sum)>=EPSILON)
-            return 1;
+            return 0;
     }
-    return 0;
+    /* every centroids changed doesn't changed more then epsilon */
+    return 1;
 }
 
 int find_cluster(double **Centroids,double *Datapoint,int dimension,int K)
@@ -130,13 +133,26 @@ void free_memory(double ** Centroids,double **Datapoints,int K,int N)
 
 int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename)
 {
+    /*
+    c= pointer to char while scanning the input\ output size
+    N= number of vectors
+    dimension= vector's dimension
+    firstLine= helps know when we are scanning the first line and only then calculate the dimension
+    i, j, counter= counters for loop iteretions 
+    corr= saves each string we scan and helps converting to double
+    Datapoints= saves all datapoint's vectors
+    Centroids= saves all centroid's vectors (updated)
+    oldCentroids= saves all centroid's vectors (before change)
+    */
     FILE *ifp=NULL;
     char c;
     int N,dimension;
     int firstLine;
     int i,j,counter;
     double corr;
-    double **Datapoints,**Centroids;
+    double **Datapoints;
+    double **Centroids;
+    double **oldCentroids;
     int cluster;
 
     if(max_iter<=0)
@@ -185,6 +201,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     rewind(ifp);
     Datapoints=malloc((sizeof(double*))*N);
     Centroids=malloc((sizeof(double*))*K);
+    oldCentroids=malloc((sizeof(double*))*K);
 
     if(Datapoints == NULL || Centroids == NULL){
         printf("An Error Has Occurred");
@@ -203,6 +220,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
         {
             /* last call contains number of datapoints assigned to centroid's cluster*/
             Centroids[i]=malloc((sizeof(double))*(dimension+1));
+            oldCentroids[i]=malloc((sizeof(double))*(dimension));
             if(Centroids[i] == NULL){
                 printf("An Error Has Occurred");
                 return 1;
@@ -217,6 +235,7 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
                 if(i<K)
                 {
                     Centroids[i][j]=(double)corr;
+                    oldCentroids[i][j]=(double)corr;
                 }
                 fgetc(ifp);
             }
@@ -226,13 +245,13 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
         if(i<K)
         {
             Centroids[i][j]=0;
-            Centroids[i][j+1]=0;
+            /*Centroids[i][j+1]=0;*/
         }
     }
 
     fclose(ifp);
 
-    while((check_euclidean_norm(Centroids,dimension,K)) && (max_iter>counter))
+    while(max_iter>counter)
     {
         for(i=0;i<N;i++)
         {
@@ -266,6 +285,14 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
             }
             Centroids[i][dimension]=0;
         }
+
+        if(check_euclidean_norm(Centroids,oldCentroids,dimension,K))
+        {
+            break;
+        }
+        
+        updateOldCentroid(Centroids,oldCentroids,dimension,K);
+
         counter++;
     }
 
@@ -295,6 +322,18 @@ int kMeans(int K, int max_iter, const char *input_filename, const char *output_f
     free_memory(Centroids,Datapoints,K,N);
 
     return 0;
+}
+
+void updateOldCentroid(double **newCentroids ,double **oldCentroids,int dimension, int K)
+{
+    int i,j;
+    for(i=0;i<K;i++)
+    {
+        for(j=0;j<dimension;j++)
+        {
+            oldCentroids[i][j]=newCentroids[i][j];
+        }
+    }
 }
 
 int is_number(const char *argument)

@@ -10,8 +10,9 @@ def kMeans(K, max_iter,input_filename, output_filename):
     fileOpener = open(input_filename, "r")
     
     data_points_array = [] # saves the datapoint x1, ... , xN (array DxN)
-    kMeans_array = [] # saves the centroids u1, ... , uK
-    kMeans_size_array = [0 for i in range(K)] # saves clusters size |S1|, ..., |SK|
+    Centroids_array = [] # saves the centroids u1, ... , uK
+    oldCentroids_array = [] # saves the unupdated centroids u1, ... , uK
+    Centroids_size_array = [0 for i in range(K)] # saves clusters size |S1|, ..., |SK|
     counter = 0
 
     # build data_points_array
@@ -21,7 +22,8 @@ def kMeans(K, max_iter,input_filename, output_filename):
             break
         data_points_array.append([float(x) for x in line.split(",")])
         if counter < K :
-            kMeans_array.append([float(x) for x in line.split(",")])
+            Centroids_array.append([float(x) for x in line.split(",")])
+            oldCentroids_array.append([float(x) for x in line.split(",")])
         counter += 1
     fileOpener.close()
     ### end of while loop
@@ -39,53 +41,62 @@ def kMeans(K, max_iter,input_filename, output_filename):
     counter = 0
 
     # while euclidean norm is larger then x and number of iteration is less then max_iter
-    while (check_euclidean_norm(kMeans_array)) and (max_iter > counter) :
+    while max_iter > counter:
         # calculate cluster for each datapoint
         for i in range(N):
             # update each datapoints's cluster
-            data_points_cluster[i] = find_cluster(kMeans_array, data_points_array[i]) # update cluster array
+            data_points_cluster[i] = find_cluster(Centroids_array, data_points_array[i]) # update cluster array
             # updtae number of datapoints that belongs to each cluster 
-            kMeans_size_array[data_points_cluster[i] - 1] += 1 # update cluster's size
+            Centroids_size_array[data_points_cluster[i] - 1] += 1 # update cluster's size
 
-        kMeans_array = [[float(0) for i in range (dimension)] for j in range(K)]
+        Centroids_array = [[float(0) for i in range (dimension)] for j in range(K)]
         
         # calculate updated clusters
         for i in range(len(data_points_array)):
-            add_vectors(kMeans_array[data_points_cluster[i]-1], data_points_array[i])
-        for i in range(len(kMeans_array)):
-            div_vectors(kMeans_array[i], kMeans_size_array[i])
+            add_vectors(Centroids_array[data_points_cluster[i]-1], data_points_array[i],dimension)
+        for i in range(len(Centroids_array)):
+            div_vectors(Centroids_array[i], Centroids_size_array[i],dimension)
         
-        kMeans_size_array=[0 for i in range(K)]
+        Centroids_size_array=[0 for i in range(K)]
+
+        if(check_euclidean_norm(Centroids_array,oldCentroids_array,dimension,K)):
+            break
+        
+        updateOldCentroid(Centroids_array,oldCentroids_array,dimension,K)
+
         counter+=1
 
+    Centroids_array = [['%.4f' % (Centroids_array[j][i]) for i in range (len(data_points_array[0]))] for j in range(K)]
     fileOpener = open(output_filename, "w")
-    kMeans_array = [['%.4f' % (kMeans_array[j][i]) for i in range (len(data_points_array[0]))] for j in range(K)]
 
-    for mean in kMeans_array:
-        for i in range(len(mean)):
-            if i != (len(mean)-1):
+    for mean in Centroids_array:
+        for i in range(dimension):
+            if i != (dimension-1):
                 fileOpener.write(str(mean[i]) + ",")
             else:
                 fileOpener.write(str(mean[i]) + "\n")
+    
+    fileOpener.close()
+    
 
-def check_euclidean_norm(kMeans_array):
-    for mean in kMeans_array:
+def check_euclidean_norm(Centroids_array,oldCentroids_array,dimension,K):
+    for i in range(K):
         sum = 0
-        for i in mean:
-            sum += i**2
-        # if there exist a centroid that changes more then epsilon- return true 
-        # there is no convergence yet
+        for j in range(dimension):
+            sum += ((Centroids_array[i][j]-oldCentroids_array[i][j])**2)
+        # if there exist a centroid that changes more then epsilon- return false 
         if math.sqrt(sum) >= EPSILON:
-            return True
-    return False
+            return False
+    # every centroid hasn't changed more then epsilon
+    return True
 
 # find the corresponding cluster of datapoint
-def find_cluster(kMeans_array, dataPoint):
+def find_cluster(Centroids_array, dataPoint):
     meanIndex = 0
     minSum = math.inf
     index = 0
 
-    for mean in kMeans_array :
+    for mean in Centroids_array :
         index += 1
         sum = 0
         
@@ -97,15 +108,19 @@ def find_cluster(kMeans_array, dataPoint):
             meanIndex = index
     return meanIndex
 
-def add_vectors(mean, data_point):
-    for i in range(len(mean)):
+def add_vectors(mean, data_point,dimension):
+    for i in range(dimension):
         mean[i] += data_point[i]
 
-def div_vectors(mean, clusterSize):
+def div_vectors(mean, clusterSize,dimension):
     if clusterSize != 0:
-        for i in range(len(mean)):
+        for i in range(dimension):
             mean[i] = mean[i] / clusterSize
 
+def updateOldCentroid(newCentroids ,oldCentroids,dimension,K):
+    for i in range(K):
+        for j in range(dimension):
+            oldCentroids[i][j]=newCentroids[i][j]
 
 def main(argv):
     max_iter=200
@@ -128,7 +143,7 @@ def main(argv):
                 isValid=(argv[i][-4:]==".txt")
         if(isValid==False):
             print("Inavlid Input!")
-        sys.exit()
+            sys.exit()
     
     if(max_iter<=0):
         print("Inavlid Input!")
