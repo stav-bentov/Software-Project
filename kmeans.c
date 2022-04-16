@@ -8,7 +8,7 @@
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K);
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
 void free_memory(double **Centroids, double **Datapoints, double **oldCentroids, int K, int N);
-void kMeans(int K, int max_iter, const char *input_filename, const char *output_filename);
+int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename);
 void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
 int is_number(const char *argument);
 int is_txt(const char *argument);
@@ -72,12 +72,10 @@ int main(int argc, char const *argv[])
     if (argc == 5)
     {
         max_iter = atoi(argv[2]);
-        kMeans(K, max_iter, argv[3], argv[4]);
-        return 0;
+        return kMeans(K, max_iter, argv[3], argv[4]);
     }
 
-    kMeans(K, max_iter, argv[2], argv[3]);
-    return 0;
+    return kMeans(K, max_iter, argv[2], argv[3]);
 }
 
 /* gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
@@ -146,7 +144,7 @@ void free_memory(double **Centroids, double **Datapoints, double **oldCentroids,
     free(Centroids);
 }
 
-void kMeans(int K, int max_iter, const char *input_filename, const char *output_filename)
+int kMeans(int K, int max_iter, const char *input_filename, const char *output_filename)
 {
     /*
     ifp= file's pointer.
