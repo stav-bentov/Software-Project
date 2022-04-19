@@ -1,6 +1,7 @@
 import math
 import sys
 
+
 EPSILON = 0.001
 
 
@@ -18,23 +19,25 @@ def kMeans(K, max_iter, input_filename, output_filename):
     # build data_points_array
     while True:
         line = fileOpener.readline()
-        if line == '':
+        if line == '': #end of file
             break
-        data_points_array.append([float(x) for x in line.split(",")])
-        if counter < K:
+        data_points_array.append([float(x) for x in line.split(",")]) #each data point is in different line, seperated with commas
+        if counter < K: #at first the centroids are the first k data points
             Centroids_array.append([float(x) for x in line.split(",")])
             oldCentroids_array.append([float(x) for x in line.split(",")])
         counter += 1
     fileOpener.close()
     # end of while loop
 
-    N = len(data_points_array)
+
+
+    N = len(data_points_array) #N = number of data points
 
     if(K > N or K <= 0):
         print("Invalid Input!")
         sys.exit()
 
-    dimension = len(data_points_array[0])
+    dimension = len(data_points_array[0]) #dimension of each data point (vector)
 
     # for each 0<=i<N data_points_cluster[i]=S for s is the cluster of xi
     data_points_cluster = [0 for i in range(N)]
@@ -70,6 +73,8 @@ def kMeans(K, max_iter, input_filename, output_filename):
 
         counter += 1
 
+
+    #writing K centroids with 4 digits after the point to the output file 
     Centroids_array = [['%.4f' % (Centroids_array[j][i]) for i in range(
         len(data_points_array[0]))] for j in range(K)]
     fileOpener = open(output_filename, "w")
@@ -96,8 +101,6 @@ def check_euclidean_norm(Centroids_array, oldCentroids_array, dimension, K):
     return True
 
 # find the corresponding cluster of datapoint
-
-
 def find_cluster(Centroids_array, dataPoint):
     meanIndex = 0
     minSum = math.inf
@@ -110,12 +113,13 @@ def find_cluster(Centroids_array, dataPoint):
         for i in range(len(dataPoint)):
             sum += (dataPoint[i] - mean[i])**2
 
+        #finding the cluster the is closest to dataPoint
         if sum <= minSum:
             minSum = sum
             meanIndex = index
     return meanIndex
 
-
+# updating the centroids by summing and dividing them by their size 
 def add_vectors(mean, data_point, dimension):
     for i in range(dimension):
         mean[i] += data_point[i]
@@ -134,7 +138,7 @@ def updateOldCentroid(newCentroids, oldCentroids, dimension, K):
 
 
 def main(argv):
-    max_iter = 200
+    max_iter = 200 #default value 
     isValid = True
     argLen = len(argv)
     if(argLen < 4 or argLen > 5):
@@ -142,17 +146,17 @@ def main(argv):
         sys.exit()
 
     for i in range(argLen):
-        if(argLen == 5):
-            if(i == 1 or i == 2):
+        if(argLen == 5):#argument maxIter has been given by user 
+            if(i == 1 or i == 2):#checking if first 2 arguments (K, maxIter) are integers
                 isValid = argv[i].isnumeric()
-            if(i == 3 or i == 4):
+            if(i == 3 or i == 4):#checking if 3rd, 4th arguments (inputFile, outputFile) are .txt files
                 isValid = (argv[i][-4:] == ".txt")
-        else:
+        else:# arglen == 4, argument maxIter has not been given by user 
             if(i == 1):
                 isValid = argv[i].isnumeric()
             if(i == 2 or i == 3):
                 isValid = (argv[i][-4:] == ".txt")
-        if(isValid == False):
+        if(isValid == False):#one of the checks above failed
             print("Inavlid Input!")
             sys.exit()
 
