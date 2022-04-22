@@ -347,6 +347,7 @@ void free_memory(double **Centroids, double **Datapoints, double **oldCentroids,
     }
     free(Datapoints);
     free(Centroids);
+    free(oldCentroids);
 }
 
 /* gets the updated centroids and old ones- update the old centroids*/
