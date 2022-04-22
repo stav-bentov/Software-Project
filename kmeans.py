@@ -149,13 +149,9 @@ def main(argv):
         if(argLen == 5):#argument maxIter has been given by user 
             if(i == 1 or i == 2):#checking if first 2 arguments (K, maxIter) are integers
                 isValid = argv[i].isnumeric()
-            if(i == 3 or i == 4):#checking if 3rd, 4th arguments (inputFile, outputFile) are .txt files
-                isValid = (argv[i][-4:] == ".txt")
         else:# arglen == 4, argument maxIter has not been given by user 
             if(i == 1):
                 isValid = argv[i].isnumeric()
-            if(i == 2 or i == 3):
-                isValid = (argv[i][-4:] == ".txt")
         if(isValid == False):#one of the checks above failed
             print("Inavlid Input!")
             sys.exit()
