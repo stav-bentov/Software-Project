@@ -18,7 +18,7 @@ void kMeans(int K, int max_iter, float epsilon, char *input_filename,  char *out
 void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
 int is_number(const char *argument);
 
-static void kMeans(int K, int max_iter, float epsilon, char *input_filename, char *output_filename)
+static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
 {
     /*
     ifp= file's pointer.
@@ -34,111 +34,43 @@ static void kMeans(int K, int max_iter, float epsilon, char *input_filename, cha
     */
     FILE *ifp = NULL;
     char c;
-    int N, dimension;
     int firstLine;
     int i, j, counter;
     double corr;
-    double **Datapoints;
-    double **Centroids;
     double **oldCentroids;
     int cluster;
 
-    i = 0;
-    j = 0;
-    dimension = 1;
-    N = 0;
-    firstLine = 1;
     counter = 0;
 
-    ifp = fopen(input_filename, "r");
-    if (ifp == NULL)
-    {
-        printf(ERROR);
-        exit(1);
-    }
-
-    /* count number of rows= number of vectors, number of ',' in first lise= dimension*/
-    while ((c = fgetc(ifp)) != EOF)
-    {
-        if (firstLine)
-            if (c == ',')
-                dimension++;
-        if (c == '\n')
-        {
-            N++;
-            if (firstLine)
-            {
-                firstLine = 0;
-            }
-        }
-    }
-
+    /* TODO check in python*/
     if (K > N || K <= 0)
     {
         printf(INVALID);
         exit(1);
     }
 
-    rewind(ifp);
-    Datapoints = malloc((sizeof(double *)) * N);
-    Centroids = malloc((sizeof(double *)) * K);
     oldCentroids = malloc((sizeof(double *)) * K);
-
-    if (Datapoints == NULL || Centroids == NULL || oldCentroids == NULL)
+    if (oldCentroids == NULL)
     {
         printf(ERROR);
         exit(1);
     }
-
-    /* set arrays and then insert datapoints and centroids*/
-    for (i = 0; i < N; i++)
+    for(i=0;i<K;i++)
     {
-        /* last cell contains the datapoint's cluster*/
-        Datapoints[i] = malloc((sizeof(double)) * (dimension + 1));
-        if (Datapoints[i] == NULL)
+        oldCentroids[i] = malloc((sizeof(double)) * (dimension));
+        if (oldCentroids[i] == NULL)
         {
             printf(ERROR);
             exit(1);
         }
-        if (i < K)
+        for(j=0; j<dimension; j++)
         {
-            /* last call contains number of datapoints assigned to centroid's cluster*/
-            Centroids[i] = malloc((sizeof(double)) * (dimension + 1));
-            oldCentroids[i] = malloc((sizeof(double)) * (dimension));
-            if (Centroids[i] == NULL || oldCentroids[i] == NULL)
-            {
-                printf(ERROR);
-                exit(1);
-            }
-        }
-
-        /* insert vectors coordinate*/
-        for (j = 0; j < dimension; j++)
-        {
-            if (fscanf(ifp, "%lf", &corr) == 1)
-            {
-                Datapoints[i][j] = (double)corr;
-                if (i < K)
-                {
-                    Centroids[i][j] = (double)corr;
-                    oldCentroids[i][j] = (double)corr;
-                }
-                fgetc(ifp);
-            }
-        }
-
-        /* zero in last cell [dimension+1]*/
-        Datapoints[i][j] = 0;
-        if (i < K)
-        {
-            Centroids[i][j] = 0;
+            /* TODO check if it's a variable or pointer equal*/
+            oldCentroids[i][j]=Centroids[i][j];
         }
     }
 
-    /* done reading*/
-    fclose(ifp);
-
-    /* calculate k-means:
+    /* Calculate k-means:
     stop iteration when number of iteration is more then man_iter
     or when all of the centroids have changed less then epsilon*/
     while (max_iter > counter)
@@ -147,13 +79,13 @@ static void kMeans(int K, int max_iter, float epsilon, char *input_filename, cha
         {
             cluster = find_cluster(Centroids, Datapoints[i], dimension, K);
 
-            /* update for each datapoint- what number of cluster it belongs
+            /* Update for each datapoint- what number of cluster it belongs
             and for each centroids update the number of datapoints that belong to it*/
             Datapoints[i][dimension] = cluster;
             Centroids[cluster - 1][dimension] += 1;
         }
 
-        /* set all centroids to zero so that updated centroid can be calculated next*/
+        /* Set all centroids to zero so that updated centroids can be calculated next*/
         for (i = 0; i < K; i++)
         {
             for (j = 0; j < dimension; j++)
@@ -162,7 +94,7 @@ static void kMeans(int K, int max_iter, float epsilon, char *input_filename, cha
             }
         }
 
-        /* update centroids according to the calculations*/
+        /* Update centroids according to the calculations*/
         for (i = 0; i < N; i++)
         {
             cluster = Datapoints[i][dimension];
@@ -194,31 +126,9 @@ static void kMeans(int K, int max_iter, float epsilon, char *input_filename, cha
         counter++;
     }
 
-    ifp = fopen(output_filename, "w");
-    if (ifp == NULL)
-    {
-        printf(ERROR);
-        exit(1);
-    }
+    /* TODO check if return is needed for Centroids*/
 
-    /* writes k-means output file*/
-    for (i = 0; i < K; i++)
-    {
-        for (j = 0; j < dimension; j++)
-        {
-            if (j == dimension - 1)
-            {
-                fprintf(ifp, "%.4f", Centroids[i][j]);
-            }
-            else
-                fprintf(ifp, "%.4f,", Centroids[i][j]);
-        }
-        fprintf(ifp, "\n");
-    }
-
-    fclose(ifp);
-
-    free_memory(Centroids, Datapoints, oldCentroids, K, N);
+    free_memory(oldCentroids, K);
 }
 
 /* gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
@@ -271,21 +181,14 @@ static int find_cluster(double **Centroids, double *Datapoint, int dimension, in
 }
 
 /* get all 3 arrays and free all memory that was in use*/
-static void free_memory(double **Centroids, double **Datapoints, double **oldCentroids, int K, int N)
+static void free_memory(double **ArrayToFree, int size)
 {
     int i;
-    for (i = 0; i < N; i++)
+    for (i = 0; i < size; i++)
     {
-        if (i < K)
-        {
-            free(Centroids[i]);
-            free(oldCentroids[i]);
-        }
-        free(Datapoints[i]);
+        free(ArrayToFree[i]);
     }
-    free(Datapoints);
-    free(Centroids);
-    free(oldCentroids);
+    free(ArrayToFree);
 }
 
 /* gets the updated centroids and old ones- update the old centroids*/
@@ -320,9 +223,101 @@ static int is_number(const char *argument)
 
 static PyObject* fit(PyObject *self,PyObject *args)
 {
-    int N,K,max_iter;
+    PyObject *Datapoints_PyObject;
+    PyObject *Centroids_PyObject;
+    PyObject *current_datapoint;
+    PyObject *current_centroid;
+    PyObject *current_double;
+    PyObject *returned_Centroids;
+    /* args= N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension*/
+    int N,K,max_iter,dimension;
     float epsilon;
+    double **Datapoints;
+    double **Centroids;
+    int i,j;
 
+    /* TODO care of ERROR */
+    /* TODO check string format- \n is OK?*/
+    if (!PyArg_ParseTuple(args, "iiiOOdi", &N, &K, &max_iter, &Datapoints_PyObject, &Centroids_PyObject, &epsilon,&dimension))
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+
+    /* Set up Datapoints and Centroids*/
+    Datapoints = malloc((sizeof(double *)) * N);
+    if(Datapoints==NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+    Centroids = malloc((sizeof(double *)) * K);
+    if(Centroids==NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+
+    for (i = 0; i < N; i++) 
+    {
+        Datapoints[i] = malloc((sizeof(double)) * (dimension + 1));
+        if (Datapoints[i] == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
+        current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
+
+        if(i<K)
+        {
+            Centroids[i] = malloc((sizeof(double)) * (dimension + 1));
+            if (Centroids[i] == NULL)
+            {
+                printf(ERROR);
+                exit(1);
+            }
+            current_centroid = PyList_GetItem(Centroids_PyObject, i);
+        }
+
+        /* update datapoints and centroids */
+        for(j=0; j<dimension; j++)
+        {
+            current_double=PyList_GetItem(current_datapoint,j);
+            Datapoints[i][j]=Pyfloat_AsDouble(current_double);
+
+            if(i<K)
+            {
+                current_double=PyList_GetItem(current_centroid,j);
+                Centroids[i][j]=Pyfloat_AsDouble(current_double);
+            }
+        }
+
+        /* zero in last cell [dimension]*/
+        Datapoints[i][j] = 0;
+        if (i < K)
+        {
+            Centroids[i][j] = 0;
+        }
+    }
+
+    kMeans(N,K,max_iter,epsilon,Datapoints,Centroids,dimension);
+    /* TODO centroids here are good*/
+
+    returned_Centroids=PyList_New(K);
+    for(i=0; i<K; i++)
+    {
+        current_centroid=PyList_New(dimension);
+        for (j=0;j<dimension;j++)
+        {
+            PyList_SetItem(current_centroid,j,Py_BuildValue("d",Centroids[i][j]));
+        }
+        PyList_SetItem(returned_Centroids,i,Py_BuildValue("O",current_centroid));
+    }
+
+    free_memory(Datapoints,N);
+    free_memory(Centroids,N);
+
+    return returned_Centroids;
 }
 
 static PyMethodDef Methods[]={
