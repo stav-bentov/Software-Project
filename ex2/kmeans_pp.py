@@ -3,7 +3,7 @@ import imp
 import numpy as np
 import pandas as pd
 import sys
-#import mykmeanssp
+import mykmeanssp
 
 def kMeans_init(K, maxIter, mergeDf, epsilon):
 
@@ -27,7 +27,7 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
         Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         index=np.random.choice(Index_array,p=Pr_array)
         Centroids_array.append(data_points_array[index])
-    print("type(Centroids_array):",type(Centroids_array))
+    #print("type(Centroids_array):",type(Centroids_array))
     return Centroids_array
 
 
@@ -93,8 +93,8 @@ def main(argv):
     dimension=merge_data.shape[1]-1
     returnFromFit=callFit(K,max_iter,epsilon,merge_data,centriods,dimension)
     output_res=""
-
-    for i in range(K):
+    print(returnFromFit)
+    '''for i in range(K):
         output_res+=str(int(returnFromFit[0][i]))
         if (i!=K-1):
             output_res+=","
@@ -106,9 +106,9 @@ def main(argv):
             if (i!=K-1):
                 output_res+=","
         output_res+="\n"
+    print(output_res)'''
 
 def callFit(K, max_iter, epsilon, merge_data, centroids,dimension):
-    
     datapoints = merge_data.iloc[: , 1:]
     centroids=np.array(centroids)
     centroids_indices=centroids[:,0]
@@ -117,8 +117,10 @@ def callFit(K, max_iter, epsilon, merge_data, centroids,dimension):
     datapoints_list=datapoints.values.tolist()
     centroids_list=centroids.tolist()
 
+    # TODO use try and except?
     #N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
-    return (centroids_indices,fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
+    #return (centroids_indices,mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
+    return mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension)
 
 def mergeInputs(input_1,input_2):
     data1= pd.read_csv(input_1, header=None)

@@ -11,12 +11,12 @@
 #define ERROR "An Error Has Occurred"
 
 /* TODO update functions*/
+/* TODO function description*/
 static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
 static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
 static void free_memory(double **ArrayToFree, int size);
 static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
-static int is_number(const char *argument);
 static PyObject* fit(PyObject *self,PyObject *args);
 
 static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
@@ -26,18 +26,12 @@ static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoint
     c= pointer to char while scanning the input\output size.
     N= number of vectors.
     dimension= vector's dimension.
-    firstLine= helps knowing when we are scanning the first line and only then calculate the dimension.
     i, j, counter= counters for loop iterations.
-    corr= saves each string we scan and helps converting to double.
     Datapoints= saves all datapoint's vectors.
     Centroids= saves all centroid's vectors (updated).
     oldCentroids= saves all centroid's vectors (before change).
     */
-    FILE *ifp = NULL;
-    char c;
-    int firstLine;
     int i, j, counter;
-    double corr;
     double **oldCentroids;
     int cluster;
 
@@ -161,6 +155,8 @@ static int find_cluster(double **Centroids, double *Datapoint, int dimension, in
     int i, j, cluster;
     double sum, minSum;
 
+    cluster=0; /*Default*/
+
     minSum = DBL_MAX;
     for (i = 0; i < K; i++)
     {
@@ -203,23 +199,6 @@ static void updateOldCentroid(double **newCentroids, double **oldCentroids, int 
             oldCentroids[i][j] = newCentroids[i][j];
         }
     }
-}
-
-/* checks if the string that has been given in input is a valid number*/
-static int is_number(const char *argument)
-{
-    int i;
-    char c;
-    i = 0;
-    c = argument[0];
-    while (c != '\0')
-    {
-        i++;
-        if (!isdigit(c))
-            return 0;
-        c = argument[i];
-    }
-    return 1;
 }
 
 static PyObject* fit(PyObject *self,PyObject *args)
@@ -268,6 +247,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
             return NULL;
         }
         current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
+        current_centroid=NULL; /*Default*/
 
         if(i<K)
         {
@@ -284,12 +264,12 @@ static PyObject* fit(PyObject *self,PyObject *args)
         for(j=0; j<dimension; j++)
         {
             current_double=PyList_GetItem(current_datapoint,j);
-            Datapoints[i][j]=Pyfloat_AsDouble(current_double);
+            Datapoints[i][j]=PyFloat_AsDouble(current_double);
 
             if(i<K)
             {
                 current_double=PyList_GetItem(current_centroid,j);
-                Centroids[i][j]=Pyfloat_AsDouble(current_double);
+                Centroids[i][j]=PyFloat_AsDouble(current_double);
             }
         }
 
