@@ -3,7 +3,7 @@ import imp
 import numpy as np
 import pandas as pd
 import sys
-import mykmeanssp
+#import mykmeanssp
 
 def kMeans_init(K, maxIter, mergeDf, epsilon):
 
@@ -27,7 +27,7 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
         Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         index=np.random.choice(Index_array,p=Pr_array)
         Centroids_array.append(data_points_array[index])
-    #print(Centroids_array)
+    print("type(Centroids_array):",type(Centroids_array))
     return Centroids_array
 
 
@@ -82,10 +82,43 @@ def main(argv):
     if(argLen == 6):
         max_iter = (int)(argv[2])
         merge_data=mergeInputs(argv[4], argv[5])
-        return kMeans_init(K, max_iter, merge_data, argv[3])#todo check!!
-    merge_data=mergeInputs(argv[3], argv[4])
-    return kMeans_init(K, max_iter, merge_data, argv[2])#todo check!!
+        epsilon=argv[3]
+        centriods= kMeans_init(K, max_iter, merge_data, argv[3])#TODO check!!
+    else:
+        merge_data=mergeInputs(argv[3], argv[4])
+        centriods= kMeans_init(K, max_iter, merge_data, argv[2])#TODO check!!
+        epsilon=argv[2]
 
+    #TODO check cases with vectors length 1 
+    dimension=merge_data.shape[1]-1
+    returnFromFit=callFit(K,max_iter,epsilon,merge_data,centriods,dimension)
+    output_res=""
+
+    for i in range(K):
+        output_res+=str(int(returnFromFit[0][i]))
+        if (i!=K-1):
+            output_res+=","
+    output_res+="\n"
+
+    for i in range(K):
+        for j in range(dimension):
+            output_res+=str(int(returnFromFit[1][i][j]))
+            if (i!=K-1):
+                output_res+=","
+        output_res+="\n"
+
+def callFit(K, max_iter, epsilon, merge_data, centroids,dimension):
+    
+    datapoints = merge_data.iloc[: , 1:]
+    centroids=np.array(centroids)
+    centroids_indices=centroids[:,0]
+    centroids=centroids[:,1:]
+    N=len(merge_data)
+    datapoints_list=datapoints.values.tolist()
+    centroids_list=centroids.tolist()
+
+    #N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
+    return (centroids_indices,fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
 
 def mergeInputs(input_1,input_2):
     data1= pd.read_csv(input_1, header=None)

@@ -10,13 +10,14 @@
 #define INVALID "Invalid Input!"
 #define ERROR "An Error Has Occurred"
 
-
-int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K, float epsilon);
-int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
-void free_memory(double **Centroids, double **Datapoints, double **oldCentroids, int K, int N);
-void kMeans(int K, int max_iter, float epsilon, char *input_filename,  char *output_filename);
-void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
-int is_number(const char *argument);
+/* TODO update functions*/
+static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
+static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
+static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
+static void free_memory(double **ArrayToFree, int size);
+static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
+static int is_number(const char *argument);
+static PyObject* fit(PyObject *self,PyObject *args);
 
 static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
 {
@@ -330,7 +331,7 @@ static PyMethodDef Methods[]={
 
 static struct PyModuleDef moudledef={
     PyModuleDef_HEAD_INIT,
-    mykeanssp,
+    "mykmeanssp",
     NULL,
     -1,
     Methods
