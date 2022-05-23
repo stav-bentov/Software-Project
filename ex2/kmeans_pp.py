@@ -5,6 +5,10 @@ import pandas as pd
 import sys
 import mykmeanssp
 
+# TODO add description to func 
+# TODO check errors
+# TODO remove all the notes for us
+
 def kMeans_init(K, maxIter, mergeDf, epsilon):
 
     Centroids_array = []  # saves the centroids u1, ... , uK
@@ -50,7 +54,9 @@ def isfloat(num):
 
 
 def main(argv):
-    max_iter = 300 #default value 
+    max_iter = 300 #Default value
+
+    # Validate that the command line arguments are in correct format
     isValid = True
     argLen = len(argv)
     if(argLen < 5 or argLen > 6):
@@ -63,38 +69,46 @@ def main(argv):
                 isValid = argv[i].isnumeric()
             if(i == 3):#checking if epsilon is float
                 isValid = isfloat(argv[i])
-                
-
+                epsilon=float(argv[3])
         else:# arglen == 5, argument maxIter has not been given by user 
             if(i == 1):
                 isValid = argv[i].isnumeric()
             if(i == 2):#checking if epsilon is float
                 isValid = isfloat(argv[i])
+                epsilon=float(argv[2])
         if(isValid == False):#one of the checks above failed
             print("Inavlid Input!")
             sys.exit()
 
-    if(max_iter <= 0):
+    K = (int)(argv[1])
+    if(max_iter <= 0 or epsilon<0 or K<=0):
         print("Inavlid Input!")
         sys.exit()
 
-    K = (int)(argv[1])
+    # Merge data with help of the correct values from argv
     if(argLen == 6):
         max_iter = (int)(argv[2])
         merge_data=mergeInputs(argv[4], argv[5])
-        epsilon=argv[3]
         centriods= kMeans_init(K, max_iter, merge_data, argv[3])#TODO check!!
     else:
         merge_data=mergeInputs(argv[3], argv[4])
         centriods= kMeans_init(K, max_iter, merge_data, argv[2])#TODO check!!
-        epsilon=argv[2]
+    
+    N=len(merge_data)
+    if (K > N):
+        print("Inavlid Input!")
+        sys.exit()
 
     #TODO check cases with vectors length 1 
     dimension=merge_data.shape[1]-1
-    returnFromFit=callFit(K,max_iter,epsilon,merge_data,centriods,dimension)
+
+    # TODO check if good incase of an error- maybe seperete to 2 parts
+    printOutput(callFit(N,K,max_iter,epsilon,merge_data,centriods,dimension),dimension,K)
+    
+
+def printOutput(returnFromFit,dimension,K):
     output_res=""
-    print(returnFromFit)
-    '''for i in range(K):
+    for i in range(K):
         output_res+=str(int(returnFromFit[0][i]))
         if (i!=K-1):
             output_res+=","
@@ -102,25 +116,26 @@ def main(argv):
 
     for i in range(K):
         for j in range(dimension):
-            output_res+=str(int(returnFromFit[1][i][j]))
-            if (i!=K-1):
+            # TODO make sure that if there are zeros- ommit them
+            output_res+=str('%.4f' %(returnFromFit[1][i][j]))
+            if (j!=dimension-1):
                 output_res+=","
         output_res+="\n"
-    print(output_res)'''
+    print(output_res)
 
-def callFit(K, max_iter, epsilon, merge_data, centroids,dimension):
+def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension):
+
+    # Get arguments for fit function
     datapoints = merge_data.iloc[: , 1:]
     centroids=np.array(centroids)
     centroids_indices=centroids[:,0]
     centroids=centroids[:,1:]
-    N=len(merge_data)
     datapoints_list=datapoints.values.tolist()
     centroids_list=centroids.tolist()
 
     # TODO use try and except?
     #N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
-    #return (centroids_indices,mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
-    return mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension)
+    return (centroids_indices,mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
 
 def mergeInputs(input_1,input_2):
     data1= pd.read_csv(input_1, header=None)

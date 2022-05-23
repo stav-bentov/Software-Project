@@ -9,17 +9,19 @@
 
 #define INVALID "Invalid Input!"
 #define ERROR "An Error Has Occurred"
+#define SUCCESS 0
+#define FAIL -1
 
 /* TODO update functions*/
 /* TODO function description*/
-static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
+static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
 static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
 static void free_memory(double **ArrayToFree, int size);
 static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
 static PyObject* fit(PyObject *self,PyObject *args);
 
-static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
+static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
 {
     /*
     ifp= file's pointer.
@@ -37,26 +39,28 @@ static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoint
 
     counter = 0;
 
-    /* TODO check in python*/
-    if (K > N || K <= 0)
+    /* TODO check in python-DONE*/
+    /*if (K > N || K <= 0)
     {
         printf(INVALID);
         exit(1);
-    }
+    }*/
 
     oldCentroids = malloc((sizeof(double *)) * K);
     if (oldCentroids == NULL)
     {
-        printf(ERROR);
-        exit(1);
+        /*printf(ERROR);
+        exit(1);*/
+        return FAIL;
     }
     for(i=0;i<K;i++)
     {
         oldCentroids[i] = malloc((sizeof(double)) * (dimension));
         if (oldCentroids[i] == NULL)
         {
-            printf(ERROR);
-            exit(1);
+            /*printf(ERROR);
+            exit(1);*/
+            return FAIL;
         }
         for(j=0; j<dimension; j++)
         {
@@ -124,6 +128,7 @@ static void kMeans(int N, int K, int max_iter, float epsilon, double **Datapoint
     /* TODO check if return is needed for Centroids*/
 
     free_memory(oldCentroids, K);
+    return SUCCESS;
 }
 
 /* gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
@@ -215,6 +220,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
     double **Datapoints;
     double **Centroids;
     int i,j;
+    int return_value;
 
     /* TODO care of ERROR */
     /* TODO check string format- \n is OK?*/
@@ -254,13 +260,13 @@ static PyObject* fit(PyObject *self,PyObject *args)
             Centroids[i] = malloc((sizeof(double)) * (dimension + 1));
             if (Centroids[i] == NULL)
             {
-                printf(ERROR);
-                exit(1);
+                PyErr_SetString(PyExc_RuntimeError, ERROR);
+                return NULL;
             }
             current_centroid = PyList_GetItem(Centroids_PyObject, i);
         }
 
-        /* update datapoints and centroids */
+        /* Set datapoint's and centroid's vectors*/
         for(j=0; j<dimension; j++)
         {
             current_double=PyList_GetItem(current_datapoint,j);
@@ -273,7 +279,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
             }
         }
 
-        /* zero in last cell [dimension]*/
+        /* Zero in last cell [dimension]*/
         Datapoints[i][j] = 0;
         if (i < K)
         {
@@ -281,7 +287,12 @@ static PyObject* fit(PyObject *self,PyObject *args)
         }
     }
 
-    kMeans(N,K,max_iter,epsilon,Datapoints,Centroids,dimension);
+    return_value=kMeans(N,K,max_iter,epsilon,Datapoints,Centroids,dimension);
+    if(return_value==FAIL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
     /* TODO centroids here are good*/
 
     returned_Centroids=PyList_New(K);
@@ -296,7 +307,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
     }
 
     free_memory(Datapoints,N);
-    free_memory(Centroids,N);
+    free_memory(Centroids,K);
 
     return returned_Centroids;
 }
