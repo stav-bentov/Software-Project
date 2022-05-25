@@ -7,6 +7,7 @@ import mykmeanssp
 # TODO add description to func 
 # TODO check errors
 # TODO remove all the notes for us
+# TODO check every function uses all inputs
 
 def kMeans_init(K, maxIter, mergeDf, epsilon):
 
