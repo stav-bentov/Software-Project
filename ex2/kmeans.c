@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#include <Python/Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
