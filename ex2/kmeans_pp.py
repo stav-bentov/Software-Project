@@ -13,9 +13,7 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
     Centroids_array = []  # saves the centroids u1, ... , uK
 
     mergeDf=mergeDf.sort_values(by=[0])
-    #print(mergeDf)
     data_points_array=mergeDf.to_numpy() # saves the datapoints
-    #print(data_points_array)
 
     N = len(data_points_array)
 
@@ -30,9 +28,7 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
         Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         index=np.random.choice(Index_array,p=Pr_array)
         Centroids_array.append(data_points_array[index])
-    #print("type(Centroids_array):",type(Centroids_array))
     return Centroids_array
-
 
 def find_D(D_array, datapoints_array, N, Centroids_array):
     D_array[N]=0
@@ -51,59 +47,49 @@ def isfloat(num):
     except ValueError:
         return False
 
-
-def main(argv):
-    max_iter = 300 #Default value
-
+def checkInput(input,argLen):
     # Validate that the command line arguments are in correct format
-    isValid = True
-    argLen = len(argv)
     if(argLen < 5 or argLen > 6):
         print("Inavlid Input!")
         sys.exit()
 
+    isValid = True
+
+    # Check each argument
     for i in range(argLen):
-        if(argLen == 6):#argument maxIter has been given by user 
-            if(i == 1 or i == 2):#checking if first 2 arguments (K, maxIter) are integers
-                isValid = argv[i].isnumeric()
-            if(i == 3):#checking if epsilon is float
-                isValid = isfloat(argv[i])
-                epsilon=float(argv[3])
-        else:# arglen == 5, argument maxIter has not been given by user 
+        #Argument maxIter has been given by user 
+        if(argLen == 6):
+            #Checking if first 2 arguments (K, maxIter) are integers
+            if(i == 1 or i == 2):
+                isValid = input[i].isnumeric()
+                #Checking max_iter>0 and k>0
+                if(isValid):
+                    if(int(input[i])<=0):
+                        isValid=False
+            #checking if epsilon is float and =>0
+            if(i == 3):
+                isValid = isfloat(input[i])
+                if(isValid):
+                    if(float(input[i])<0):
+                        isValid=False
+        # arglen == 5, argument maxIter has not been given by user 
+        else:
             if(i == 1):
-                isValid = argv[i].isnumeric()
-            if(i == 2):#checking if epsilon is float
-                isValid = isfloat(argv[i])
-                epsilon=float(argv[2])
-        if(isValid == False):#one of the checks above failed
+                isValid = input[i].isnumeric()
+                #Checking k>0
+                if(isValid):
+                    if(int(input[i])<=0):
+                        isValid=False
+            #Checking epsilon is float and =>0
+            if(i == 2):
+                isValid = isfloat(input[i])
+                if(isValid):
+                    if(float(input[i])<0):
+                        isValid=False
+        #One of the checks above failed
+        if(isValid == False):
             print("Inavlid Input!")
             sys.exit()
-
-    K = (int)(argv[1])
-    if(max_iter <= 0 or epsilon<0 or K<=0):
-        print("Inavlid Input!")
-        sys.exit()
-
-    # Merge data with help of the correct values from argv
-    if(argLen == 6):
-        max_iter = (int)(argv[2])
-        merge_data=mergeInputs(argv[4], argv[5])
-        centriods= kMeans_init(K, max_iter, merge_data, argv[3])#TODO check!!
-    else:
-        merge_data=mergeInputs(argv[3], argv[4])
-        centriods= kMeans_init(K, max_iter, merge_data, argv[2])#TODO check!!
-    
-    N=len(merge_data)
-    if (K > N):
-        print("Inavlid Input!")
-        sys.exit()
-
-    #TODO check cases with vectors length 1 
-    dimension=merge_data.shape[1]-1
-
-    # TODO check if good incase of an error- maybe seperete to 2 parts
-    printOutput(callFit(N,K,max_iter,epsilon,merge_data,centriods,dimension),dimension,K)
-    
 
 def printOutput(returnFromFit,dimension,K):
     output_res=""
@@ -142,6 +128,36 @@ def mergeInputs(input_1,input_2):
     mergeDf=pd.merge(data1, data2, on=0)
     mergeDf.columns=[i for i in range(len(mergeDf.columns))]
     return mergeDf
+
+def main(argv):
+
+    '''=========================Checking input========================='''
+    argLen = len(argv)
+    checkInput(argv,argLen)
+    '''=========================Set arguments========================='''
+    max_iter = 300 #Default value
+    K = (int)(argv[1])
+    # Merge data with help of the correct values from argv
+    if(argLen == 6):
+        max_iter = (int)(argv[2])
+        epsilon=float(argv[3])
+        merge_data=mergeInputs(argv[4], argv[5])
+        centriods= kMeans_init(K, max_iter, merge_data, argv[3])#TODO check!!
+    else:
+        epsilon=float(argv[2])
+        merge_data=mergeInputs(argv[3], argv[4])
+        centriods= kMeans_init(K, max_iter, merge_data, argv[2])#TODO check!!
+    N=len(merge_data)
+    if (K > N):
+        print("Inavlid Input!")
+        sys.exit()
+    #TODO check cases with vectors length 1 
+    dimension=merge_data.shape[1]-1
+    '''===================Done checking and getting input=================='''
+
+    '''====================Get final centroids and print==================='''
+    # TODO check if good incase of an error- maybe seperete to 2 parts
+    printOutput(callFit(N,K,max_iter,epsilon,merge_data,centriods,dimension),dimension,K)
 
 if __name__ == '__main__':
     main(sys.argv)

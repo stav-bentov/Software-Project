@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python/Python.h>
+#include <Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,7 +12,7 @@
 #define SUCCESS 0
 #define FAIL -1
 
-/* TODO update functions*/
+/* TODO update functions- Done*/
 /* TODO function description*/
 static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
@@ -24,13 +24,7 @@ static PyObject* fit(PyObject *self,PyObject *args);
 static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension)
 {
     /*
-    ifp= file's pointer.
-    c= pointer to char while scanning the input\output size.
-    N= number of vectors.
-    dimension= vector's dimension.
     i, j, counter= counters for loop iterations.
-    Datapoints= saves all datapoint's vectors.
-    Centroids= saves all centroid's vectors (updated).
     oldCentroids= saves all centroid's vectors (before change).
     */
     int i, j, counter;
@@ -39,8 +33,8 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
 
     counter = 0;
 
-    /* TODO check in python-DONE*/
-    /*if (K > N || K <= 0)
+    /* TODO check in python-DONE
+    if (K > N || K <= 0)
     {
         printf(INVALID);
         exit(1);
