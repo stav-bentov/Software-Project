@@ -18,7 +18,7 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
 
     N = len(data_points_array)
 
-    D_array = np.array([0 for i in range(N+1)])
+    D_array = np.array([0.0 for i in range(N+1)])
     Pr_array = np.array([0 for i in range(N)])
     Index_array=np.array([i for i in range(N)])
     np.random.seed(0)
@@ -26,16 +26,18 @@ def kMeans_init(K, maxIter, mergeDf, epsilon):
     
     for i in range(1,K):
         find_D(D_array, data_points_array, N, Centroids_array)
-        Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
+        if D_array[N] != 0:#todo check
+            Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         index=np.random.choice(Index_array,p=Pr_array)
         Centroids_array.append(data_points_array[index])
     return Centroids_array
 
 def find_D(D_array, datapoints_array, N, Centroids_array):
-    D_array[N]=0
+    D_array[N]=0.0
     for l in range(N):
-        D_array[l] = min([calc(datapoints_array[l][1:],centroid[1:]) for centroid in Centroids_array])
+        D_array[l] = np.min([calc(datapoints_array[l][1:],centroid[1:]) for centroid in Centroids_array])
         D_array[N] = D_array[N] + D_array[l]
+
 
 def calc(x,y):
     z=np.subtract(x, y)
@@ -120,6 +122,7 @@ def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension):
     centroids_list=centroids.tolist()
 
     # TODO use try and except?
+    #return (centroids_indices, centroids_indices)
     #N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
     return (centroids_indices,mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension))
 
@@ -162,3 +165,5 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
+
+
