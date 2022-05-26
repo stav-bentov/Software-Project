@@ -58,7 +58,6 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
         }
         for(j=0; j<dimension; j++)
         {
-            /* TODO check if it's a variable or pointer equal*/
             oldCentroids[i][j]=Centroids[i][j];
         }
     }
