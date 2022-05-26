@@ -7,41 +7,44 @@ import mykmeanssp
 # TODO add description to func 
 # TODO check errors
 # TODO remove all the notes for us
-# TODO check every function uses all inputs
+# TODO check every function uses all inputs - f.e removed (maxIter, epsilon) from kMeans_init
 
-def kMeans_init(K, maxIter, mergeDf, epsilon):
+
+def kMeans_init(K, mergeDf):
 
     Centroids_array = []  # saves the centroids u1, ... , uK
 
-    mergeDf=mergeDf.sort_values(by=[0])
-    data_points_array=mergeDf.to_numpy() # saves the datapoints
+    mergeDf = mergeDf.sort_values(by=[0])
+    data_points_array = mergeDf.to_numpy()  # saves the datapoints
 
     N = len(data_points_array)
 
     D_array = np.array([0.0 for i in range(N+1)])
-    Pr_array = np.array([0 for i in range(N)])
-    Index_array=np.array([i for i in range(N)])
+    Pr_array = np.array([0.0 for i in range(N)])
+    Index_array = np.array([i for i in range(N)])
     np.random.seed(0)
     Centroids_array.append(data_points_array[np.random.choice(Index_array)])
     
-    for i in range(1,K):
+    for i in range(1, K):
         find_D(D_array, data_points_array, N, Centroids_array)
-        if D_array[N] != 0:#todo check
+        if D_array[N] != 0:  #todo check
             Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
-        index=np.random.choice(Index_array,p=Pr_array)
+        index = np.random.choice(Index_array,p=Pr_array)
         Centroids_array.append(data_points_array[index])
     return Centroids_array
 
+
 def find_D(D_array, datapoints_array, N, Centroids_array):
-    D_array[N]=0.0
+    D_array[N] = 0.0
     for l in range(N):
-        D_array[l] = np.min([calc(datapoints_array[l][1:],centroid[1:]) for centroid in Centroids_array])
+        D_array[l] = np.min([calc(datapoints_array[l][1:], centroid[1:]) for centroid in Centroids_array])
         D_array[N] = D_array[N] + D_array[l]
 
 
-def calc(x,y):
-    z=np.subtract(x, y)
-    return np.sum(np.multiply(z,z))
+def calc(x, y):
+    z = np.subtract(x, y)
+    return np.sum(np.multiply(z, z))
+
 
 def isfloat(num):
     try:
@@ -50,10 +53,11 @@ def isfloat(num):
     except ValueError:
         return False
 
-def checkInput(input,argLen):
+
+def checkInput(given_input, argLen):
     # Validate that the command line arguments are in correct format
-    if(argLen < 5 or argLen > 6):
-        print("Inavlid Input!")
+    if (argLen < 5) or (argLen > 6):
+        print("Invalid Input!")
         sys.exit()
 
     isValid = True
@@ -61,37 +65,37 @@ def checkInput(input,argLen):
     # Check each argument
     for i in range(argLen):
         #Argument maxIter has been given by user 
-        if(argLen == 6):
+        if argLen == 6:
             #Checking if first 2 arguments (K, maxIter) are integers
             if(i == 1 or i == 2):
-                isValid = input[i].isnumeric()
+                isValid = given_input[i].isnumeric()
                 #Checking max_iter>0 and k>0
-                if(isValid):
-                    if(int(input[i])<=0):
-                        isValid=False
+                if (isValid):
+                    if(int(given_input[i]) <= 0):
+                        isValid = False
             #checking if epsilon is float and =>0
-            if(i == 3):
-                isValid = isfloat(input[i])
+            if (i == 3):
+                isValid = isfloat(given_input[i])
                 if(isValid):
-                    if(float(input[i])<0):
-                        isValid=False
+                    if(float(given_input[i])<0):
+                        isValid = False
         # arglen == 5, argument maxIter has not been given by user 
         else:
             if(i == 1):
-                isValid = input[i].isnumeric()
+                isValid = given_input[i].isnumeric()
                 #Checking k>0
                 if(isValid):
-                    if(int(input[i])<=0):
+                    if(int(given_input[i])<=0):
                         isValid=False
             #Checking epsilon is float and =>0
             if(i == 2):
-                isValid = isfloat(input[i])
+                isValid = isfloat(given_input[i])
                 if(isValid):
-                    if(float(input[i])<0):
+                    if(float(given_input[i])<0):
                         isValid=False
         #One of the checks above failed
         if(isValid == False):
-            print("Inavlid Input!")
+            print("Invalid Input!")
             sys.exit()
 
 def printOutput(returnFromFit,dimension,K):
@@ -146,22 +150,29 @@ def main(argv):
         max_iter = (int)(argv[2])
         epsilon=float(argv[3])
         merge_data=mergeInputs(argv[4], argv[5])
-        centriods= kMeans_init(K, max_iter, merge_data, argv[3])#TODO check!!
+        N = len(merge_data)
+        if (K > N):
+            print("Invalid Input!")
+            sys.exit()
+        centroids= kMeans_init(K, merge_data)#TODO check!!
+        #centroids = kMeans_init(K, max_iter, merge_data, argv[3])  # TODO check!!
     else:
         epsilon=float(argv[2])
         merge_data=mergeInputs(argv[3], argv[4])
-        centriods= kMeans_init(K, max_iter, merge_data, argv[2])#TODO check!!
-    N=len(merge_data)
-    if (K > N):
-        print("Inavlid Input!")
-        sys.exit()
+        N = len(merge_data)
+        if (K > N):
+            print("Invalid Input!")
+            sys.exit()
+        centroids= kMeans_init(K, merge_data)#TODO check!!
+        #centroids = kMeans_init(K, max_iter, merge_data, argv[2])  # TODO check!!
+
     #TODO check cases with vectors length 1 
     dimension=merge_data.shape[1]-1
     '''===================Done checking and getting input=================='''
 
     '''====================Get final centroids and print==================='''
-    # TODO check if good incase of an error- maybe seperete to 2 parts
-    printOutput(callFit(N,K,max_iter,epsilon,merge_data,centriods,dimension),dimension,K)
+    # TODO check if good incase of an error- maybe separate to 2 parts
+    printOutput(callFit(N,K,max_iter,epsilon,merge_data,centroids,dimension),dimension,K)
 
 if __name__ == '__main__':
     main(sys.argv)
