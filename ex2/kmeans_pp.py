@@ -23,7 +23,8 @@ def kMeans_init(K, mergeDf):
 
     D_array = np.array([0.0 for i in range(N+1)])
     Pr_array = np.array([0.0 for i in range(N)]) # Pr_array[i] = probability of
-    Index_array = np.array([i for i in range(N)])# Index_array[i] = ith datapoint in the mergedDf #TODO check if the indices are 1-100 or 3,292,999...
+    Index_array = data_points_array[:, 0].astype(int)
+    #Index_array = np.array([i for i in range(N)])# Index_array[i] = ith datapoint in the mergedDf #TODO check if the indices are 1-100 or 3,292,999...
     np.random.seed(0)
     Centroids_array.append(data_points_array[np.random.choice(Index_array)]) # miu 1
     
@@ -31,6 +32,7 @@ def kMeans_init(K, mergeDf):
         find_D(D_array, data_points_array, N, Centroids_array) # calculating D_l
         if D_array[N] != 0:  #todo check what to do if it happens
             Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)]) # Pr_array[i] = D_l / sum(d_l for each 1<=l<=N)
+
         index = np.random.choice(Index_array,p=Pr_array) # choosing randomly an index of a datapoint to be centroid
         Centroids_array.append(data_points_array[index])
     return Centroids_array
@@ -118,6 +120,10 @@ def printOutput(returnFromFit,dimension,K):
                 output_res += ","
         output_res += "\n"
     print(output_res)
+
+    fileOpener = open("output_filename.txt", "w")
+    fileOpener.write(output_res)
+    fileOpener.close()
 
 def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension): #calling fit function from kmeans.c
 
