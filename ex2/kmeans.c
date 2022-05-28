@@ -12,7 +12,6 @@
 #define SUCCESS 0
 #define FAIL -1
 
-/* TODO update functions- Done*/
 /* TODO function description*/
 static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
@@ -33,18 +32,9 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
 
     counter = 0;
 
-    /* TODO check in python-DONE
-    if (K > N || K <= 0)
-    {
-        printf(INVALID);
-        exit(1);
-    }*/
-
     oldCentroids = malloc((sizeof(double *)) * K);
     if (oldCentroids == NULL)
     {
-        /*printf(ERROR);
-        exit(1);*/
         return FAIL;
     }
     for(i=0;i<K;i++)
@@ -52,8 +42,6 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
         oldCentroids[i] = malloc((sizeof(double)) * (dimension));
         if (oldCentroids[i] == NULL)
         {
-            /*printf(ERROR);
-            exit(1);*/
             return FAIL;
         }
         for(j=0; j<dimension; j++)
@@ -117,8 +105,6 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
 
         counter++;
     }
-
-    /* TODO check if return is needed for Centroids*/
 
     free_memory(oldCentroids, K);
     return SUCCESS;
@@ -215,8 +201,6 @@ static PyObject* fit(PyObject *self,PyObject *args)
     int i,j;
     int return_value;
 
-    /* TODO care of ERROR */
-    /* TODO check string format- \n is OK?*/
     if (!PyArg_ParseTuple(args, "iiiOOdi", &N, &K, &max_iter, &Datapoints_PyObject, &Centroids_PyObject, &epsilon,&dimension))
     {
         PyErr_SetString(PyExc_RuntimeError, ERROR);
@@ -286,7 +270,6 @@ static PyObject* fit(PyObject *self,PyObject *args)
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
-    /* TODO centroids here are good*/
 
     returned_Centroids=PyList_New(K);
     for(i=0; i<K; i++)
