@@ -128,7 +128,6 @@ def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension): #calling f
     datapoints_list=datapoints.values.tolist()
     centroids_list=centroids.tolist()
 
-    # TODO use try and except?
     # N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
     try:
         final_centroids = mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension)
