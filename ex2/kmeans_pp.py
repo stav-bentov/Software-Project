@@ -4,11 +4,6 @@ import pandas as pd
 import sys
 import mykmeanssp
 
-# TODO add description to func 
-# TODO check errors
-# TODO remove all the notes for us
-
-
 def kMeans_init(K, mergeDf):
 
     Centroids_array = []  # Saves the centroids u1, ... , uK
@@ -167,7 +162,6 @@ def main(argv):
         N = len(merge_data)
         centroids= kMeans_init(K, merge_data)
 
-    #TODO check cases with vectors length 1 
     dimension=merge_data.shape[1]-1
     '''===================Done checking and getting input=================='''
 
