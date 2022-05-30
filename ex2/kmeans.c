@@ -12,7 +12,6 @@
 #define SUCCESS 0
 #define FAIL -1
 
-/* TODO function description*/
 static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
 static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
@@ -110,13 +109,13 @@ static int kMeans(int N, int K, int max_iter, float epsilon, double **Datapoints
     return SUCCESS;
 }
 
-/* gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
+/* Gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon)
 {
     int i, j;
     double sum;
 
-    /*calculate euclidean norm for each centroid*/
+    /*Calculate euclidean norm for each centroid*/
     for (i = 0; i < K; i++)
     {
         sum = 0;
@@ -125,15 +124,15 @@ static int check_euclidean_norm(double **newCentroids, double **oldCentroids, in
             sum += pow(newCentroids[i][j] - oldCentroids[i][j], 2);
         }
 
-        /* one centroid changed more then epsilon*/
+        /* One centroid changed more then epsilon*/
         if (sqrt(sum) >= epsilon)
             return 0;
     }
-    /* every centroids changed less then epsilon */
+    /* Every centroids changed less then epsilon */
     return 1;
 }
 
-/* gets the centroids and one datapoint and return datapoint's cluster*/
+/* Gets the centroids and one datapoint and return datapoint's cluster*/
 static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K)
 {
     int i, j, cluster;
@@ -153,7 +152,7 @@ static int find_cluster(double **Centroids, double *Datapoint, int dimension, in
         {
             minSum = sum;
 
-            /* cluster number i+1 because it represented by index cell i*/
+            /* Cluster number i+1 because it represented by index cell i*/
             cluster = i + 1;
         }
     }
@@ -161,7 +160,7 @@ static int find_cluster(double **Centroids, double *Datapoint, int dimension, in
     return cluster;
 }
 
-/* get all 3 arrays and free all memory that was in use*/
+/* Gets an array to be free (pointers of pointers) and their size*/
 static void free_memory(double **ArrayToFree, int size)
 {
     int i;
@@ -172,7 +171,7 @@ static void free_memory(double **ArrayToFree, int size)
     free(ArrayToFree);
 }
 
-/* gets the updated centroids and old ones- update the old centroids*/
+/* Gets the updated centroids and old ones- update the old centroids*/
 static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K)
 {
     int i, j;
@@ -185,6 +184,7 @@ static void updateOldCentroid(double **newCentroids, double **oldCentroids, int 
     }
 }
 
+/* Gets N,K,max_iter,epsilon,dimension, Datapoints and initial Centroids lists from python and calculate thier Centroids.*/
 static PyObject* fit(PyObject *self,PyObject *args)
 {
     PyObject *Datapoints_PyObject;
@@ -193,6 +193,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
     PyObject *current_centroid;
     PyObject *current_double;
     PyObject *returned_Centroids;
+
     /* args= N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension*/
     int N,K,max_iter,dimension;
     float epsilon;
@@ -243,7 +244,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
             current_centroid = PyList_GetItem(Centroids_PyObject, i);
         }
 
-        /* Set datapoint's and centroid's vectors*/
+        /* Set Datapoint's and Centroid's vectors*/
         for(j=0; j<dimension; j++)
         {
             current_double=PyList_GetItem(current_datapoint,j);
@@ -264,6 +265,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
         }
     }
 
+    /* update Centroids- is not fail then no error occured, Centroids have been updated*/
     return_value=kMeans(N,K,max_iter,epsilon,Datapoints,Centroids,dimension);
     if(return_value==FAIL)
     {
@@ -271,6 +273,7 @@ static PyObject* fit(PyObject *self,PyObject *args)
         return NULL;
     }
 
+    /* Convert Centroids to an array list (python)*/
     returned_Centroids=PyList_New(K);
     for(i=0; i<K; i++)
     {

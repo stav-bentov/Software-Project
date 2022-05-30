@@ -119,7 +119,6 @@ def printOutput(returnFromFit,dimension,K):
     print(output_res)
 
 def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension): #calling fit function from kmeans.c
-
     # Get arguments for fit function
     datapoints = merge_data.iloc[: , 1:]
     centroids=np.array(centroids)
