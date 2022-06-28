@@ -8,7 +8,6 @@
 #define INVALID "Invalid Input!"
 #define ERROR "An Error Has Occurred"
 
-
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K);
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
 void free_memory(double **Centroids, double **Datapoints, double **oldCentroids, int K, int N);

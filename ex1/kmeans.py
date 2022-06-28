@@ -1,9 +1,7 @@
 import math
 import sys
 
-
 EPSILON = 0.001
-
 
 def kMeans(K, max_iter, input_filename, output_filename):
 
@@ -28,8 +26,6 @@ def kMeans(K, max_iter, input_filename, output_filename):
         counter += 1
     fileOpener.close()
     # end of while loop
-
-
 
     N = len(data_points_array) #N = number of data points
 
