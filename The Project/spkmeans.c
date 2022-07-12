@@ -1,4 +1,309 @@
-//
-// Created by Zohar Mosseri on 06/07/2022.
-//
+
+#define PY_SSIZE_T_CLEAN
+#include <Python/Python.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
+
+#define INVALID "Invalid Input!"
+#define ERROR "An Error Has Occurred"
+#define SUCCESS 0
+#define FAIL -1
+
+
+typedef struct Tuple {
+    int successful;
+    double* eigenvalues;
+    double** eigenVectors;
+}jacobiTuple;
+
+
+static void free_memory(double **ArrayToFree, int size);
+
+static PyObject* fit_jacobi(PyObject *self,PyObject *args);
+static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon);
+static int matrix_allocation(double **mat, int size);
+static int checkConvergence(int N, double **A, double **A1, float epsilon);
+static double find_Aij(int N, double **A, int* iPointer, int* jPointer);
+static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer);
+static double **calc_A1(int N, double **A,double **A1, double c, double s, int i, int j);
+static double **calc_curr_P(double **curr_P, int i, int j, double c, double s);
+static double **calc_V(int N, double **V, double **curr_P);
+static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
+
+
+/* Gets an array to be free (pointers of pointers) and their size*/
+static void free_memory(double **ArrayToFree, int size){
+    int i;
+    for (i = 0; i < size; i++){
+        free(ArrayToFree[i]);
+    }
+    free(ArrayToFree);
+}
+
+
+static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
+    int counter, malloc_failure_check;
+    int iPointer, jPointer;
+    double Aij; /*pivot element*/
+    double **A1; /* A' matrix */
+    double **V; /*eigenVectors*/
+    double **curr_P;/*P matrix - keeps changing and (V = V x curr_P)*/
+    double *eigenvalues;
+    double cPointer ,sPointer;
+
+    /*allocate memory for the matrices and if there was a failue then malloc_failure_check != 0*/
+    malloc_failure_check = matrix_allocation(A1, N);
+    malloc_failure_check += matrix_allocation(V, N);/*todo check if size is NxN*/
+    malloc_failure_check += matrix_allocation(curr_P, N);/*todo check if size is NxN*/
+
+    eigenvalues = malloc(N * sizeof(double));/*len of diagonal of squared matrix (NxN) is always N*/
+    if (eigenvalues == NULL || malloc_failure_check != 0){
+        jacobiTuple structTuple = {-1, eigenvalues, V};/*FAIL*/
+        return structTuple;
+    }
+
+    while ((max_iter >= counter) && (counter == 0 || !checkConvergence(N, A, A1,epsilon))){/*todo check : even if check Convergence is true in the beginning, i want to do this while loop*/
+        counter++;
+        /*A = A1 todo it in a function*/
+        memcpy(A,A1, N*N*sizeof(double));/*todo it in a function or maybe as a loop*/
+
+        Aij = find_Aij(N, A, &iPointer ,&jPointer);
+        find_c_s_t(A, Aij, iPointer, jPointer, &cPointer, &sPointer);
+        A1 = calc_A1(N, A, A1,cPointer,sPointer,iPointer,jPointer);/*gets A, c, s, i, j*/
+        curr_P = calc_curr_P(curr_P, iPointer, jPointer, cPointer, sPointer);
+        V = calc_V(N, V, curr_P); /*todo - matrix multiplication*/
+    }
+
+    get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
+    /*todo - remeber eigenvalues must be ordered increasingly and respecting multiplicities*/
+    jacobiTuple structTuple = {0, eigenvalues, V}; /* returns 1 on success, eigenvalues, eigenvectors*/
+    return structTuple;
+}
+
+static double **calc_V(int N, double **V, double **curr_P) {/*todo check about complexity - maybe can do it in place or just at the end*/
+    int i,j,k;
+    double** c;
+    matrix_allocation(c, N);
+
+    for(i=0;i<N;i++){
+        for(j=0;j<N;j++){
+            for(k=0;k<N;k++){
+                c[i][j]+=V[i][k]*curr_P[k][j];
+            }
+        }
+    }
+    return c;
+}
+
+static int matrix_allocation(double **mat, int size) {
+    /*allocation of memory of size (nxn) and return 1 if there was a failure!*/
+    int i;
+    mat = malloc((sizeof(double *)) * size);
+    if (mat == NULL)
+        return 1;
+    for (i = 0; i < size; i++) {
+        mat[i] = malloc((sizeof(double)) * (size));
+        if (mat[i] == NULL)
+            return 1;
+    }
+    return 0;
+}
+
+static int checkConvergence(int N, double **A, double **A1, float epsilon){
+    /* (true) iff off(A)^2 - off(A')^2 <= epsilon */
+    int i,j;
+    double off_A_squared, off_A1_squared;
+    for (i = 0; i < N; i++){
+        for (j = 0; j < N; j++) {
+            if (i != j){
+                off_A_squared = off_A_squared + (pow(A[i][j], 2));
+                off_A1_squared = off_A1_squared + (pow(A1[i][j], 2));
+            }
+        }
+    }
+    if (off_A_squared - off_A1_squared <= epsilon)
+        return 1;
+
+    return 0;
+}
+
+static double find_Aij(int N, double **A, int* iPointer, int* jPointer) { /* finds the off-diagonal element with the largest ABSOLUTE value*/
+    int q,l;
+    double maxElem = -INFINITY;/*todo change - be careful*/
+    for (q = 0; q < N; ++q) {
+        for (l = 0; l < N; ++l) {
+            if (q != l){
+                if (fabs(A[q][l]) > maxElem) {
+                    maxElem = A[q][l];
+                    /*changes i,j pointers*/
+                    *iPointer = q;
+                    *jPointer = l;
+                }
+            }
+        }
+    }
+    return maxElem;/*value of Aij*/
+}
+
+static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer) {
+    double theta, t;
+    double signTheta = 1;/*todo check if sign(theta) is 0 / 1 or something else*/
+    theta = (A[j][j] - A[i][i]) / (2*A[i][j]);
+    if (theta < 0)
+        signTheta = 0;
+
+    t = (signTheta) / (fabs(theta) + sqrt(pow(theta, 2) + 1));
+    *cPointer = (1)/(sqrt(pow(t, 2) + 1));
+    *sPointer = (t) * (*cPointer);/* todo ooooj check if needed * before cPointer*/
+}
+
+static double **calc_A1(int N, double **A,double **A1, double c, double s, int i, int j) {
+    for (int r = 0; r < N; ++r) {
+        if ((r != i) && (r != j)){
+            A1[r][i] = (c * A[r][i]) - (s * A[r][j]);
+            A1[r][j] = (c * A[r][j]) + (s * A[r][i]);
+        }
+        A1[i][i] = (pow(c,2) * A[i][i]) + (pow(s,2) * A[j][j]) - (2*(s*c*A[i][j]));
+        A1[j][j] = (pow(s,2) * A[i][i]) + (pow(c,2) * A[j][j]) + (2*(s*c*A[i][j]));
+    }
+    A1[i][j] = ((pow(c,2) - pow(s,2)) * A[i][j]) + (s*c*(A[i][i] - A[j][j]));/*A1[i][j] = 0*/
+    /* important - TODO last row which is not clear!!!!!!!*/
+
+    return A1;
+}
+
+static double **calc_curr_P(double **curr_P, int i, int j, double c, double s) {/*todo check, maybe this function call is not necessary - complexity wise and no return val*/
+
+    curr_P[i][i] = c;
+    curr_P[i][j] = s;
+    curr_P[j][i] = -s;
+    curr_P[j][j] = c;
+    return curr_P;/*todo - maybe not necceessery this row*/
+}
+
+static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1) {
+
+    for (int i = 0; i < N; ++i) {
+        eigenvalues[i] = A1[i][i];
+    }
+    /*todo check if thats the best way it can be done - no return of eigenvals*/
+}
+
+/* Gets N,K,max_iter,A,epsilon from python and calculate their Centroids.*/
+static PyObject* fit_jacobi(PyObject *self,PyObject *args){
+    PyObject *A_PyObject; /*A matrix*/
+    PyObject *current_datapoint;
+    PyObject *current_double;
+    PyObject *returned_result;
+    PyObject *current_vector;
+
+
+    /* args= N, K, max_iter, A, epsilon*/
+    int N,K,max_iter;
+    float epsilon;
+    double **A;
+    int i,j;
+    jacobiTuple returnFromJacobi;
+
+    /*receiving args from Python program*/
+    if (!PyArg_ParseTuple(args, "iiiOd", &N, &K, &max_iter, &A_PyObject, &epsilon)){
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+
+    /* Set up A matrix*/
+    A = malloc((sizeof(double *)) * N);
+    if(A==NULL){
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+    for (i = 0; i < N; i++){
+        A[i] = malloc((sizeof(double)) * (N));
+        if (A[i] == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
+        current_datapoint = PyList_GetItem(A_PyObject, i);
+
+        /* Set up each of A vectors*/
+        for(j=0; j<N; j++){
+            current_double=PyList_GetItem(current_datapoint,j);
+            A[i][j]=PyFloat_AsDouble(current_double);
+        }
+    }
+
+    /* returns (SUCCESS/FAIL status, eigenvalues, eigenVectors)*/
+    returnFromJacobi = jacobi(N, max_iter, A, epsilon);
+
+    if(returnFromJacobi.successful == FAIL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+
+    /* Convert Centroids to an array list (python)*/
+    int l, q, m;
+    l = sizeof(returnFromJacobi.eigenVectors);
+    q = sizeof(returnFromJacobi.eigenvalues);
+    returned_result = PyList_New(l+1);/*first row is eigenvalues then 2nd row onwards: eigenvectors*/
+    current_vector = PyList_New(sizeof(returnFromJacobi.eigenvalues));/*first row : eigenvalues*/
+
+    /*handling first row - eigenvalues*/
+    /*  returned_result[0][i] = eigenvalues[i]*/
+    for (i = 0; i < q; ++i) {
+        PyList_SetItem(current_vector,i,Py_BuildValue("d", returnFromJacobi.eigenvalues[i]));
+    }
+    PyList_SetItem(returned_result,0,Py_BuildValue("O",current_vector));
+
+    /*handling other rows - eigenvectors*/
+    /*first i+1 : eigenVector of row i in eigenVectors matrix*/
+    /*  returned_result[i+1][j] = eigenVectors[i][j]*/
+    for(i=0; i<l; i++){
+        m = sizeof(returnFromJacobi.eigenVectors[i]);
+        current_vector = PyList_New(m);
+        for (j=0;j<m;j++){
+            PyList_SetItem(current_vector,j,Py_BuildValue("d", returnFromJacobi.eigenVectors[i][j]));
+        }
+        PyList_SetItem(returned_result,i+1,Py_BuildValue("O",current_vector));
+    }
+    free_memory(A,N);
+
+    return returned_result;
+}
+
+/*//////////////////////////////END OF JACOBI/////////////////////////////////////*/
+
+
+
+/*static PyMethodDef Methods[]={
+        {"fit_jacobi",
+                (PyCFunction) fit_jacobi,
+                METH_VARARGS,
+                     NULL},
+        {NULL,NULL,0,NULL}
+};
+
+static struct PyModuleDef moudledef={
+        PyModuleDef_HEAD_INIT,
+        "mykmeanssp",
+        NULL,
+        -1,
+        Methods
+};
+
+PyMODINIT_FUNC PyInit_mykmeanssp(void)
+{
+    PyObject *m;
+    m=PyModule_Create(&moudledef);
+    if(!m)
+    {
+        return NULL;
+    }
+    return m;
+}*/
+
 
