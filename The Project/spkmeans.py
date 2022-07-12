@@ -27,16 +27,17 @@ def printOutput_jacobi(returnFromFit): #todo check if jacobi also requires comma
     print(output_res)
 
 
-
-
-def call_spk(K, data_points_array):
+def call_spk(K, data_points_array): # same as in ex2
     pass
+
 
 def call_wam(K, data_points_array):
     pass
 
+
 def call_ddg(K, data_points_array):
     pass
+
 
 def call_lnorm(K, data_points_array):
     pass

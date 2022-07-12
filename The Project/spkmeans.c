@@ -1,7 +1,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python/Python.h>
-#include <stdio.h>
+/* todo delete maybe #include <stdio.h> */
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -54,7 +54,7 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
     double *eigenvalues;
     double cPointer ,sPointer;
 
-    /*allocate memory for the matrices and if there was a failue then malloc_failure_check != 0*/
+    /*allocate memory for the matrices and if there was a failure then malloc_failure_check != 0*/
     malloc_failure_check = matrix_allocation(A1, N);
     malloc_failure_check += matrix_allocation(V, N);/*todo check if size is NxN*/
     malloc_failure_check += matrix_allocation(curr_P, N);/*todo check if size is NxN*/
@@ -78,7 +78,7 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
-    /*todo - remeber eigenvalues must be ordered increasingly and respecting multiplicities*/
+    /*todo - remember eigenvalues must be ordered increasingly and respecting multiplicities*/
     jacobiTuple structTuple = {0, eigenvalues, V}; /* returns 1 on success, eigenvalues, eigenvectors*/
     return structTuple;
 }
@@ -151,13 +151,13 @@ static double find_Aij(int N, double **A, int* iPointer, int* jPointer) { /* fin
 static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer) {
     double theta, t;
     double signTheta = 1;/*todo check if sign(theta) is 0 / 1 or something else*/
-    theta = (A[j][j] - A[i][i]) / (2*A[i][j]);
+    theta = (A[j][j] - A[i][i]) / (2*aij);
     if (theta < 0)
         signTheta = 0;
 
     t = (signTheta) / (fabs(theta) + sqrt(pow(theta, 2) + 1));
     *cPointer = (1)/(sqrt(pow(t, 2) + 1));
-    *sPointer = (t) * (*cPointer);/* todo ooooj check if needed * before cPointer*/
+    *sPointer = (t) * (*cPointer);/* todo check if needed * before cPointer*/
 }
 
 static double **calc_A1(int N, double **A,double **A1, double c, double s, int i, int j) {
@@ -181,7 +181,7 @@ static double **calc_curr_P(double **curr_P, int i, int j, double c, double s) {
     curr_P[i][j] = s;
     curr_P[j][i] = -s;
     curr_P[j][j] = c;
-    return curr_P;/*todo - maybe not necceessery this row*/
+    return curr_P;/*todo - maybe not necessary this row*/
 }
 
 static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1) {
@@ -189,7 +189,7 @@ static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1) {
     for (int i = 0; i < N; ++i) {
         eigenvalues[i] = A1[i][i];
     }
-    /*todo check if thats the best way it can be done - no return of eigenvals*/
+    /*todo check if that's the best way it can be done - no return of eigenvalues*/
 }
 
 /* Gets N,K,max_iter,A,epsilon from python and calculate their Centroids.*/
