@@ -32,7 +32,7 @@ static int matrix_allocation(double **mat, int size);
 static int checkConvergence(int N, double **A, double **A1, float epsilon);
 static double find_Aij(int N, double **A, int* iPointer, int* jPointer);
 static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer);
-static double **calc_A1(int N, double **A,double **A1, double c, double s, int i, int j);
+static void calc_A1(int N, double **A,double **A1, double c, double s, int i, int j);
 static double **calc_curr_P(double **curr_P, int i, int j, double c, double s);
 static double **calc_V(int N, double **V, double **curr_P);
 static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
@@ -77,6 +77,7 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
         return structTuple;
     }
 
+    /*todo check*/
     while ((max_iter >= counter) && (counter == 0 || !checkConvergence(N, A, A1,epsilon))){/*todo check : even if check Convergence is true in the beginning, i want to do this while loop*/
         counter++;
         /*A = A1 todo it in a function*/
@@ -84,9 +85,12 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
 
         Aij = find_Aij(N, A, &iPointer ,&jPointer);
         find_c_s_t(A, Aij, iPointer, jPointer, &cPointer, &sPointer);
-        A1 = calc_A1(N, A, A1,cPointer,sPointer,iPointer,jPointer);/*gets A, c, s, i, j*/
+        calc_A1(N, A, A1,cPointer,sPointer,iPointer,jPointer);/*gets A, c, s, i, j*/
         curr_P = calc_curr_P(curr_P, iPointer, jPointer, cPointer, sPointer);
+
+        v_tag = V; /*todo that*/
         V = calc_V(N, V, curr_P); /*todo - matrix multiplication*/
+        free_memory(v_tag);
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
@@ -102,6 +106,7 @@ static double **calc_V(int N, double **V, double **curr_P) {/*todo check about c
 
     for(i=0;i<N;i++){
         for(j=0;j<N;j++){
+            c[i][j] = 0;
             for(k=0;k<N;k++){
                 c[i][j]+=V[i][k]*curr_P[k][j];
             }
@@ -172,7 +177,7 @@ static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, d
     *sPointer = (t) * (*cPointer);/* todo check if needed * before cPointer*/
 }
 
-static double **calc_A1(int N, double **A,double **A1, double c, double s, int i, int j) {
+static void calc_A1(int N, double **A,double **A1, double c, double s, int i, int j) {
     for (int r = 0; r < N; ++r) {
         if ((r != i) && (r != j)){
             A1[r][i] = (c * A[r][i]) - (s * A[r][j]);
@@ -183,12 +188,10 @@ static double **calc_A1(int N, double **A,double **A1, double c, double s, int i
     }
     A1[i][j] = ((pow(c,2) - pow(s,2)) * A[i][j]) + (s*c*(A[i][i] - A[j][j]));/*A1[i][j] = 0*/
     /* important - TODO last row which is not clear!!!!!!!*/
-
-    return A1;
 }
 
 static double **calc_curr_P(double **curr_P, int i, int j, double c, double s) {/*todo check, maybe this function call is not necessary - complexity wise and no return val*/
-
+    /*todo diagonal of ones*/
     curr_P[i][i] = c;
     curr_P[i][j] = s;
     curr_P[j][i] = -s;
