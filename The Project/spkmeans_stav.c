@@ -9,26 +9,26 @@
 #include "spkmeans_stav.h"
 
 /* 1.1.1 The Weighted Adjacency Matrix*/
-/* given N data points (and thier dimension), update the given adj_mat to be the corresponding weighted adjacency matrix.
+/* Given N data points (and thier dimension), update the given adj_mat to be the corresponding weighted adjacency matrix.
   if an error occured reteurns FAIL, else- SUCCSESS*/
 double** adjacency_matrix(double **data_points, int dimension, int N)
 {
-    printf("in adjacency_matrix");
     int i, j;
     double **adj_mat = matrix_allocation(N, N);
     if (adj_mat == NULL)
         return NULL;
     for (i = 0; i < N; i++)
     {
-        for (j = 0; j < N; j++)
+        for (j = i; j < N; j++)
         {
             adj_mat[i][j] = (i == j) ? 0 : exp((calc_euclidean_norm(data_points[i], data_points[j], dimension)) / (-2));
+            adj_mat[j][i]=adj_mat[i][j];
         }
     }
     return adj_mat;
 }
 
-/* given a vector x, vector y- calculate: ||x-y||2*/
+/* Given a vector x, vector y- calculate: ||x-y||2*/
 double calc_euclidean_norm(double *x, double *y, int dimension)
 {
     int j;
@@ -46,7 +46,7 @@ double calc_euclidean_norm(double *x, double *y, int dimension)
 if an error occured reteurns FAIL, else- SUCCSESS*/
 double **diagonal_matrix(double **adj_mat, int N)
 {
-    int i, j, return_value = 0;
+    int i, j;
     double sum=0;
     double **diag_mat = matrix_allocation(N, N);
     if (diag_mat == NULL)
@@ -67,7 +67,6 @@ double **diagonal_matrix(double **adj_mat, int N)
 /* 1.1.3 The Normalized Graph Laplacian*/
 double** laplacian_matrix(double **diag_mat, double **adj_mat, int N)
 {
-    int return_value;
     double **mul1, **mul2;
     double **lnorm;
 
@@ -109,26 +108,15 @@ double** matrix_allocation(int num_rows, int num_cols)
         if (mat[i] == NULL)
             return NULL;
     }
-    
-    printf("pointer in matrix_allocation: %p\n",mat);
 
     return mat;
-}
-
-void check_error(int bool_error)
-{
-    /* todo handle error- incase of malloc faild or somthing need to exit somehow with error*/
-    if (bool_error)
-    {
-        printf("handle error");
-    }
 }
 
 /* from Zohar, changed names to be more general ask him if OKAY, also fixed error because no c[i][j]=0 was made*/
 double **calc_mul(int N, double **A, double **B)
 { 
     /* C=A*B*/
-    int i, j, k, return_value;
+    int i, j, k;
     double **C = matrix_allocation(N, N);
     if (C == NULL)
         return NULL;
@@ -162,7 +150,7 @@ void calc_sub(int N, double **A, double **B)
 
 double **I_matrix(int N)
 {
-    int i, j, return_value;
+    int i, j;
     double **I = matrix_allocation(N, N);
     if (I == NULL)
         return NULL;
@@ -178,7 +166,7 @@ double **I_matrix(int N)
 
 int find_N_D( FILE * ifp,int find_who)
 {/* TODO- under the asumption that in jaacobi also the values sepereted by comas..*/
-    int count,first_line;
+    int count;
     char c;
 
     count=0;
@@ -217,7 +205,6 @@ int find_N_D( FILE * ifp,int find_who)
 
 void set_input(FILE *ifp,double **data_input,int num_rows,int num_cols)
 {
-    printf("in set_input. num_rows: %d, num_cols: %d\n",num_rows,num_cols);
     int i,j;
     i=0;
     j=0;
@@ -225,7 +212,6 @@ void set_input(FILE *ifp,double **data_input,int num_rows,int num_cols)
     {
         for (j = 0; j < num_cols; j++)
         {
-            //printf("in loop 1");
             if (fscanf(ifp, "%lf", &curr_value) == 1)
             {
                 data_input[i][j] = (double)curr_value;
@@ -235,7 +221,7 @@ void set_input(FILE *ifp,double **data_input,int num_rows,int num_cols)
         }
     }*/
 
-    // TODO: this one works for csv too but the other doesnt!, check if it's good..
+    /* TODO: this one works for csv too but the other doesnt!, check if it's good..*/
     char buffer[BUFFER_SIZE];
     while (fgets(buffer,BUFFER_SIZE, ifp)) 
     {
@@ -256,6 +242,7 @@ void set_input(FILE *ifp,double **data_input,int num_rows,int num_cols)
     }
 }
 
+/*FOR US...*/
 void print_matrix(double ** mat,int num_rows,int num_cols)
 {
     int i,j;
@@ -266,14 +253,14 @@ void print_matrix(double ** mat,int num_rows,int num_cols)
         {
             if (j == num_rows - 1)
             {
-                if(mat[i][j]<0 && mat[i][j]>-0.00009)
+                if(mat[i][j]<0 && fabs(mat[i][j]*1000)<1)
                     printf("0.0000");
                 else
                     printf("%.4f", mat[i][j]);
             }
             else
             {
-                if(mat[i][j]<0 && mat[i][j]>-0.00009)
+                if(mat[i][j]<0 && fabs(mat[i][j])*1000<1)
                     printf("0.0000,");
                 else
                     printf("%.4f,", mat[i][j]);
@@ -284,93 +271,153 @@ void print_matrix(double ** mat,int num_rows,int num_cols)
 
 }
 
-#define WAM 1
-#define DDG 2
-#define LNORM 3
-#define JACOBI 4
-#define SPK 5
 
-enum goal
+/* Gets an array to be free (pointers of pointers) and their size*/
+void free_memory(double **ArrayToFree, int num_rows){
+    int i;
+    for (i = 0; i < num_rows; i++){
+        free(ArrayToFree[i]);
+    }
+    free(ArrayToFree);
+}
+
+
+void msg_and_exit(int error_type,int is_error)
 {
-    wam,
-    ddg,
-    lnorm,
-    jacobi
-};
+    if(is_error)
+    {
+        /* todo handle error- incase of malloc faild or somthing need to exit somehow with error*/
+        if (error_type==INVALID_TYPE)
+        {
+            printf(INVALID);
+            exit(1);
+        }
+        else
+        {
+            printf(ERROR);
+            exit(1);
+        }
+    }
+}
 
-/*static const char *GOAL_ARRAY[]={"wam,ddg,lnorm,jacobi,spk"};*/
+void print_result(double ** mat,int num_rows,int num_cols,enum Goal goal)
+{/* TODO add special case for jaacobi?*/
+    int i,j;
+    /* TODO- added just to avoid errors in moba!!*/
+    if(goal==JACOBI)
+        num_rows++;
+    for (i = 0; i < num_rows; i++)
+    {
+        for (j = 0; j < num_cols; j++)
+        {
+            if (j == num_rows - 1)
+            {
+                if(mat[i][j]<0 && fabs(mat[i][j]*1000)<1)
+                    printf("0.0000");
+                else
+                    printf("%.4f", mat[i][j]);
+            }
+            else
+            {
+                if(mat[i][j]<0 && fabs(mat[i][j])*1000<1)
+                    printf("0.0000,");
+                else
+                    printf("%.4f,", mat[i][j]);
+            }
+        }
+        printf("\n");
+    }
+}
 
-/* FOR ME */
+
+double **run_goal(enum Goal goal,double **data_input,int N,int D)
+{
+    double **data_output,**wam_matrix,**ddg_matrix;
+
+    /* run WAM*/
+    data_output=adjacency_matrix(data_input,D,N);
+    if(data_output==NULL)
+    {/* an error occured- no need to free*/
+        return NULL;
+    }
+    if(goal==WAM)
+        return data_output;
+    
+    wam_matrix=data_output;
+    /* run DDG*/
+    data_output=diagonal_matrix(wam_matrix,N);
+    if(data_output==NULL)
+    {/* an error occured- need to free*/
+        free_memory(wam_matrix,N);
+        return NULL;
+    }
+    if(goal==DDG)
+        return data_output;
+
+    ddg_matrix=data_output;
+    /* run LNORM*/
+    data_output=laplacian_matrix(ddg_matrix,wam_matrix,N);
+    if(data_output==NULL)
+    {/* an error occured- need to free*/
+        free_memory(wam_matrix,N);
+        free_memory(ddg_matrix,N);
+        return NULL;
+    }
+    if(goal==LNORM)
+        return data_output;
+
+    /* TODO for SPK*/
+    return NULL;
+}
 
 int main(int argc, char *argv[])
 {
-    char *user_goal,*file_name;
-    int return_value,N,dimension;
-    double **data_input;
+    char *file_name;
+    int N,D;
+    double **data_input, **data_output;
     FILE *ifp;
+    enum Goal goal=0;
 
     /* invalid number of arguments*/
-    if (argc!=3 || (!strcmp("wam",argv[1]) && !strcmp("ddg",argv[1]) && !strcmp("lnorm",argv[1]) && !strcmp("jacobi",argv[1]) && !strcmp("spk",argv[1])))
-    {
-        printf(INVALID);
-        exit(1);
-    }
+    msg_and_exit(INVALID_TYPE,argc!=3);
 
-    user_goal=argv[1];
+    /* set goal correct enum*/
+    if(!strcmp("wam",argv[1]))
+        goal=wam_g;
+    if(!strcmp("ddg",argv[1]))
+        goal=ddg_g;
+    if(!strcmp("lnorm",argv[1]))
+        goal=lnorm_g;
+    if(!strcmp("jacobi",argv[1]))
+        goal=jacobi_g;
+    if(!strcmp("spk",argv[1]))
+        goal=spk_g;
+    msg_and_exit(INVALID_TYPE,goal==0);
+    
     file_name=argv[2];
-
     ifp=fopen(file_name,"r");
-    if (ifp ==NULL)
-    {
-        printf(INVALID);
-        exit(1);
-    }
-
+    msg_and_exit(ERROR_TYPE,ifp ==NULL);
+    
     N=find_N_D(ifp,FIND_N);
-    dimension=find_N_D(ifp,FIND_D);
+    D=find_N_D(ifp,FIND_D);
 
-    printf("N: %d, D: %d\n",N,dimension);
-    printf("%d, %s\n",return_value,user_goal);
+    /* create matrix for input*/
+    data_input=matrix_allocation(N,D);
+    msg_and_exit(ERROR_TYPE,data_input==NULL);
 
-    data_input=matrix_allocation(N,dimension);
-    if(data_input==NULL)
-    {
-        printf(ERROR);
-        exit(1);
-    }
-    set_input(ifp,data_input,N,dimension);
-    print_matrix(data_input,N,dimension);
+    /* set the N points/symetrix matrix in data_input*/
+    set_input(ifp,data_input,N,D);
     
-    double **adj_mat;
-    adj_mat=adjacency_matrix(data_input,dimension,N);
-    if(adj_mat==NULL)
-    {
-        printf(ERROR);
-        exit(1);
+    /* set the goal's result in data_output*/
+    data_output=run_goal(goal,data_input,N,D);
+    if(data_output==NULL)
+    { /* an error occured*/
+        free_memory(data_input,N);
+        msg_and_exit(ERROR_TYPE,1);
     }
-    print_matrix(adj_mat,N,N);
 
-    
-    double **diag_mat;
-    diag_mat=diagonal_matrix(adj_mat,N);
-    if(diag_mat==NULL)
-    {
-        printf(ERROR);
-        exit(1);
-    }
-    print_matrix(diag_mat,N,N);
+    print_result(data_output,N,N,goal);
 
-    double **lnorm_mat;
-    lnorm_mat=laplacian_matrix(diag_mat,adj_mat,N);
-    if(lnorm_mat==NULL)
-    {
-        printf(ERROR);
-        exit(1);
-    }
-    print_matrix(lnorm_mat,N,N);
-
- 
     fclose(ifp);
-    return 0;
     exit(0);
 }
