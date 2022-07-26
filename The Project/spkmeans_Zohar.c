@@ -324,15 +324,15 @@ static PyObject* fit_jacobi(PyObject *self,PyObject *args){
     }
 
     /* Convert Centroids to an array list (python)*/
-    int l, q, m;
+    /*int l, q, m;
     l = sizeof(returnFromJacobi.eigenVectors);
-    q = sizeof(returnFromJacobi.eigenvalues);
-    returned_result = PyList_New(l+1);/*first row is eigenvalues then 2nd row onwards: eigenvectors*/
-    current_vector = PyList_New(sizeof(returnFromJacobi.eigenvalues));/*first row : eigenvalues*/
+    q = sizeof(returnFromJacobi.eigenvalues);*/
+    returned_result = PyList_New(N+1);/*first row is eigenvalues then 2nd row onwards: eigenvectors*/
+    current_vector = PyList_New(N);/*first row : eigenvalues*/
 
     /*handling first row - eigenvalues*/
     /*  returned_result[0][i] = eigenvalues[i]*/
-    for (i = 0; i < q; ++i) {
+    for (i = 0; i < N; ++i) {
         PyList_SetItem(current_vector,i,Py_BuildValue("d", returnFromJacobi.eigenvalues[i]));
     }
     PyList_SetItem(returned_result,0,Py_BuildValue("O",current_vector));
@@ -340,10 +340,10 @@ static PyObject* fit_jacobi(PyObject *self,PyObject *args){
     /*handling other rows - eigenvectors*/
     /*first i+1 : eigenVector of row i in eigenVectors matrix*/
     /*  returned_result[i+1][j] = eigenVectors[i][j]*/
-    for(i=0; i<l; i++){
-        m = sizeof(returnFromJacobi.eigenVectors[i]);
-        current_vector = PyList_New(m);
-        for (j=0;j<m;j++){
+    for(i=0; i<N; i++){
+        /*m = sizeof(returnFromJacobi.eigenVectors[i]);*/
+        current_vector = PyList_New(N);
+        for (j=0;j<N;j++){
             PyList_SetItem(current_vector,j,Py_BuildValue("d", returnFromJacobi.eigenVectors[i][j]));
         }
         PyList_SetItem(returned_result,i+1,Py_BuildValue("O",current_vector));
