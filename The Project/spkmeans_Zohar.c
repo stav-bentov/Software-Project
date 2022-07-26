@@ -38,7 +38,7 @@ typedef struct Tuple {
 static PyObject* fit_jacobi(PyObject *self,PyObject *args);
 static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon);
 void identity_matrix(double **mat, int N);
-static double ** matrix_allocation(double **mat, int size);
+static double ** matrix_allocation(double **mat, int rows, int columns);
 static void matrixcopy(int N, double ** destmat, double ** srcmat);
 static int checkConvergence(int N, double **A, double **A1, float epsilon);
 static double find_Aij(int N, double **A, int* iPointer, int* jPointer);
@@ -47,7 +47,7 @@ static void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, d
 static void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
 static void matrix_multiplication(int N, double **src1, double **src2, double **dst);
 static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
-static void printmatrices(int n, double **mat_to_print) ;
+static void printmatrices(int rows, int columns, double **mat_to_print);
 static void printarray(int N, double *arr);
 static void transpose(double **mat, int N);
 
@@ -64,10 +64,10 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
     double *eigenvalues;
     double cPointer ,sPointer;
 
-    A1 = matrix_allocation(A1, N);
-    V = matrix_allocation(V, N);
+    A1 = matrix_allocation(A1, N, N);
+    V = matrix_allocation(V, N, N);
     identity_matrix(V, N); /*V equals identity matrix at the beginning*/
-    curr_P = matrix_allocation(curr_P, N);
+    curr_P = matrix_allocation(curr_P, N, N);
     eigenvalues = malloc(N * sizeof(double));/*len of diagonal of squared matrix (NxN) is always N*/
     if ((eigenvalues == NULL) || (A1 == NULL) || (V == NULL) || (curr_P == NULL) ){
         jacobiTuple structTuple = {FAIL, eigenvalues, V};/*FAIL*/
@@ -95,7 +95,7 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
     printarray(N,  eigenvalues);
-    printmatrices(N, V);
+    /*printmatrices(N, N, V);*/
     /*todo - remember eigenvalues must be ordered increasingly and respecting multiplicities*/
     jacobiTuple structTuple = {SUCCESS, eigenvalues, V}; /* returns 1 on success, eigenvalues, eigenvectors*/
     return structTuple;
@@ -131,16 +131,14 @@ static void printarray(int N, double *arr) {
     }
 }
 
-static void printmatrices(int n, double **mat_to_print) {
+static void printmatrices(int rows, int columns, double **mat_to_print) {
     int i, j;
 
-    for (i=0; i<n; i++) {
-        for (j = 0; j < n; j++) {
+    for (i=0; i<rows; i++) {
+        for (j = 0; j < columns; j++) {
             printf("mat[%d][%d] = %lf ", i,j,mat_to_print[i][j]);
-            if (j == n-1){
-                printf("\n");
-            }
         }
+        printf("\n");
     }
 }
 
@@ -159,7 +157,7 @@ static void matrixcopy(int N, double ** destmat, double ** srcmat){
 static void matrix_multiplication(int N, double **src1, double **src2, double **dst){
     double **temp;
     int i,j,k;
-    temp = matrix_allocation(temp, N);
+    temp = matrix_allocation(temp, N, N);
 
     for(i=0; i<N; i++){ /* temp = src1*src2 */
         for(j=0; j<N; j++){
@@ -177,14 +175,14 @@ static void matrix_multiplication(int N, double **src1, double **src2, double **
     free_memory(temp, N);
 }
 
-static double ** matrix_allocation(double **mat, int size) { /*good*/
+static double ** matrix_allocation(double **mat, int rows, int columns) { /*good*/
     /*allocation of memory of size (nxn) and return 1 if there was a failure!*/
     int i;
-    mat = malloc((sizeof(double *)) * size);
+    mat = malloc((sizeof(double *)) * rows);
     if (mat == NULL)
         return NULL;
-    for (i = 0; i < size; i++) {
-        mat[i] = malloc((sizeof(double)) * (size));
+    for (i = 0; i < rows; i++) {
+        mat[i] = malloc((sizeof(double)) * (columns));
         if (mat[i] == NULL)
             return NULL;
     }
@@ -273,6 +271,22 @@ static void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1) {
         eigenvalues[i] = A1[i][i];
 }
 
+static double** jacobi_eigen_merge(int N, double* eigenValues, double ** eigenVectors){
+    double** res = NULL;
+    int i,j;
+    res = matrix_allocation(res, N+1 , N);
+
+    for (i = 0; i < N; ++i)
+        res[0][i] = eigenValues[i];
+
+    for(i=0; i<N; i++) {
+        for (j = 0; j < N; j++) {
+            res[i+1][j] = eigenVectors[i][j];
+        }
+    }
+    return res;
+}
+
 /* Gets N,K,max_iter,A,epsilon from python and calculate their Centroids.*/
 static PyObject* fit_jacobi(PyObject *self,PyObject *args){
 
@@ -357,8 +371,9 @@ static PyObject* fit_jacobi(PyObject *self,PyObject *args){
 int main(){
     int size = 3;
     double ** m = NULL;
-    /*jacobiTuple returnFromJacobi;*/
-    m = matrix_allocation(m,3);
+    double ** result = NULL;
+    jacobiTuple returnFromJacobi;
+    m = matrix_allocation(m,size, size);
     m[0][0] = 0.88612627;
     m[0][1] = 0.36226522;
     m[0][2] = 0.01146638;
@@ -369,8 +384,9 @@ int main(){
     m[2][1] = 0.17301408;
     m[2][2] = 0.75444075;
 
-    /*returnFromJacobi = */
-    jacobi(size, 100, m, 0.00001);
+    returnFromJacobi = jacobi(size, 100, m, 0.00001);
+    result = jacobi_eigen_merge(size, returnFromJacobi.eigenvalues, returnFromJacobi.eigenVectors);
+    printmatrices(size+1, size, result);
 
     /*int l,a,q,j,i, p;
     l = sizeof(returnFromJacobi.eigenVectors);
