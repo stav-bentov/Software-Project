@@ -29,14 +29,9 @@ static void free_memory(double **ArrayToFree, int size){
 }
 
 /*///////////////////Jacobi////////////////////////-*/
-typedef struct Tuple {
-    int successful;
-    double* eigenvalues;
-    double** eigenVectors;
-}jacobiTuple;
 
 static PyObject* fit_jacobi(PyObject *self,PyObject *args);
-static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon);
+static double** jacobi(int N, int max_iter, double **A, float epsilon);
 void identity_matrix(double **mat, int N);
 static double ** matrix_allocation(double **mat, int rows, int columns);
 static void matrixcopy(int N, double ** destmat, double ** srcmat);
@@ -54,7 +49,7 @@ static void transpose(double **mat, int N);
 
 
 
-static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
+static double** jacobi(int N, int max_iter, double **A, float epsilon){
     int counter = 0;
     int iPointer, jPointer;
     double Aij; /*pivot element*/
@@ -94,11 +89,7 @@ static jacobiTuple jacobi(int N, int max_iter, double **A, float epsilon){
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
-    printarray(N,  eigenvalues);
-    /*printmatrices(N, N, V);*/
-    /*todo - remember eigenvalues must be ordered increasingly and respecting multiplicities*/
-    jacobiTuple structTuple = {SUCCESS, eigenvalues, V}; /* returns 1 on success, eigenvalues, eigenvectors*/
-    return structTuple;
+    return jacobi_eigen_merge(N, eigenValues, eigenVectors);
 }
 
 static void transpose(double **mat, int N) {
