@@ -6,11 +6,12 @@
 #include <math.h>
 #include <ctype.h>
 #include <float.h>
+#include <stdarg.h>
 #include "spkmeans.h"
 
 /* 1.1.1 The Weighted Adjacency Matrix*/
-/* Given N data points (and thier dimension), update the given adj_mat to be the corresponding weighted adjacency matrix.
-  if an error occured reteurns FAIL, else- SUCCSESS*/
+/* Given N data points (and their dimension), update the given adj_mat to be the corresponding weighted adjacency matrix.
+  if an error has occurred returns FAIL, else- SUCCESS*/
 double **adjacency_matrix(double **data_points, int dimension, int N)
 {
     int i, j;
@@ -43,7 +44,7 @@ double calc_euclidean_norm(double *x, double *y, int dimension)
 
 /* 1.1.2 The Diagonal Degree Matrix*/
 /* given weighted adjacency matrix size N*N, update the given diag_mat to be the corresponding diagonal degree matrix.
-if an error occured reteurns FAIL, else- SUCCSESS*/
+if an error has occurred returns FAIL, else- SUCCESS*/
 double **diagonal_matrix(double **adj_mat, int N)
 {
     int i, j;
@@ -184,14 +185,14 @@ double **jacobi_algo(int N, double **A)
     int iPointer, jPointer;
     double Aij;                        /*pivot element*/
     double **A1 = NULL;                /* A' matrix */
-    double **V = NULL, **V_tag = NULL; /*eigenVectors*/
+    double **V = NULL; /*eigenVectors*/
     double **curr_P,**jacobi_result;   /*P matrix - keeps changing and (V = V x curr_P)*/
     double *eigenvalues;
     double cPointer, sPointer;
 
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
-    { /* an error occured- no need to free*/
+    { /* an error occurred- no need to free*/
         return NULL;
     }
 
@@ -204,18 +205,20 @@ double **jacobi_algo(int N, double **A)
 
     curr_P = matrix_allocation(N, N);
     if (curr_P == NULL)
-    { /* an error occured- need to free*/
-        free_memory(A1, N);
-        free_memory(V, N);
+    { /* an error occurred- need to free*/
+        free_memory1(N, 2, A1, V);
+        /*free_memory(A1, N);
+        free_memory(V, N);*/
         return NULL;
     }
 
-    eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
+    eigenvalues = (double*) malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
     if (eigenvalues == NULL)
     {
-        free_memory(A1, N);
+        free_memory1(N, 3, A1, V, curr_P);
+        /*free_memory(A1, N);
         free_memory(V, N);
-        free_memory(curr_P, N);
+        free_memory(curr_P, N);*/
         return NULL;
     }
 
@@ -234,21 +237,49 @@ double **jacobi_algo(int N, double **A)
         /*TODO: change to one func*/
         transpose(curr_P, N);                     /* P -> P_transpose */
         matrix_multiplication(N, curr_P, A, A1);  /* A' = P_transpose*A */
+        /* todo : free memory if dst == NULL*/
+        if (A1 == NULL){ /* it is reachable!*/
+            /*todo decide which free memory to use 1 or regular*/
+            free(eigenvalues);
+            free_memory1(N, 2, V, curr_P);
+
+            /*free_memory(V, N);
+            free_memory(curr_P, N);*/
+            return NULL;
+        }
         transpose(curr_P, N);                     /* P_transpose -> P */
         matrix_multiplication(N, A1, curr_P, A1); /* A' = (P_transpose*A)*P */
+        if (A1 == NULL){ /* it is reachable!*/
+            free(eigenvalues);
+            free_memory1(N, 2, V, curr_P);
+
+            /*free_memory(V, N);
+            free_memory(curr_P, N);*/
+            return NULL;
+        }
         matrix_multiplication(N, V, curr_P, V);   /* V = V * curr_P*/
+        if (V == NULL){ /* it is reachable!*/
+            free(eigenvalues);
+            free_memory1(N, 2, A1, curr_P);
+
+            /*free_memory(A1, N);
+            free_memory(curr_P, N);*/
+            return NULL;
+        }
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*getting eigenvalues from A' diagonal!*/
     jacobi_result=jacobi_eigen_merge(N, eigenvalues, V);
     if(jacobi_result==NULL)
     {
-        free_memory(A1, N);
-        free_memory(V, N);
-        free_memory(curr_P, N);
-        //free_memory(eigenvalues, N);
-        // TODO: check if change eigenvalues allocation changes this!
+        /*todo check if A is also needs to be freed here*/
+        free_memory1(N, 3, A1, V, curr_P);
         free(eigenvalues);
+
+        /*free_memory(A1, N);
+        free_memory(V, N);
+        free_memory(curr_P, N);*/
+        // TODO: check if change eigenvalues allocation changes this!
     }
     return jacobi_result;
 }
@@ -274,9 +305,9 @@ void matrix_copy(int N, double **dest_mat, double **src_mat)
     int i, j;
 
     for (i = 0; i < N; i++)
-    { /* rad-nr */
+    {
         for (j = 0; j < N; j++)
-        { /* kolumn-nr */
+        {
             dest_mat[i][j] = src_mat[i][j];
         }
     }
@@ -417,7 +448,7 @@ double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors)
 
 /* MAIN's functions*/
 int find_N_D(FILE *ifp, int find_who)
-{ /* TODO- under the asumption that in jaacobi also the values sepereted by comas..*/
+{ /* TODO- under the assumption that in jacobi also the values seperated by comas..*/
     int count;
     char c;
 
@@ -496,6 +527,20 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
     }
 }
 
+
+void free_memory1(int N, int count, ...)
+{
+    va_list list;
+    int j;
+
+    va_start(list, count);
+    for(j=0; j<count; j++)
+    {
+        free_memory(va_arg(list, double**), N);
+    }
+    va_end(list);
+}
+
 /* Gets an array to be free (pointers of pointers) and their size*/
 void free_memory(double **ArrayToFree, int num_rows)
 {
@@ -511,7 +556,7 @@ void msg_and_exit(int error_type, int is_error)
 {
     if (is_error)
     {
-        /* todo handle error- incase of malloc faild or somthing need to exit somehow with error*/
+        /* todo handle error- incase of malloc failed or something need to exit somehow with error*/
         if (error_type == INVALID_TYPE)
         {
             printf(INVALID);
@@ -534,20 +579,12 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
     {
         for (j = 0; j < num_cols; j++)
         {
-            if (j == num_rows - 1)
-            {
-                if (mat[i][j] < 0 && fabs(mat[i][j] * 1000) < 1)
-                    printf("0.0000");
-                else
-                    printf("%.4f", mat[i][j]);
-            }
+            if (mat[i][j] < 0 && fabs(mat[i][j] * 1000) < 1)
+                printf("0.0000");
             else
-            {
-                if (mat[i][j] < 0 && fabs(mat[i][j]) * 1000 < 1)
-                    printf("0.0000,");
-                else
-                    printf("%.4f,", mat[i][j]);
-            }
+                printf("%.4f", mat[i][j]);
+            if (j != num_cols - 1)
+                printf(",");
         }
         printf("\n");
     }
@@ -566,7 +603,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D)
     /* run WAM*/
     data_output = adjacency_matrix(data_input, D, N);
     if (data_output == NULL)
-    { /* an error occured- no need to free*/
+    { /* an error has occurred- no need to free*/
         return NULL;
     }
     if (goal == WAM)
@@ -576,7 +613,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D)
     /* run DDG*/
     data_output = diagonal_matrix(wam_matrix, N);
     if (data_output == NULL)
-    { /* an error occured- need to free*/
+    { /* an error occurred- need to free*/
         free_memory(wam_matrix, N);
         return NULL;
     }
@@ -587,7 +624,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D)
     /* run LNORM*/
     data_output = laplacian_matrix(ddg_matrix, wam_matrix, N);
     if (data_output == NULL)
-    { /* an error occured- need to free*/
+    { /* an error occurred- need to free*/
         free_memory(wam_matrix, N);
         free_memory(ddg_matrix, N);
         return NULL;
@@ -634,15 +671,15 @@ int main(int argc, char *argv[])
     data_input = matrix_allocation(N, D);
     msg_and_exit(ERROR_TYPE, data_input == NULL);
 
-    /* set the N points/symetrix matrix in data_input*/
+    /* set the N points/symmetric matrix in data_input*/
     set_input(ifp, data_input, N, D);
 
     /* set the goal's result in data_output*/
     data_output = run_goal(goal, data_input, N, D);
     if (data_output == NULL)
-    { /* an error occured*/
+    { /* an error has occurred*/
         free_memory(data_input, N);
-        msg_and_exit(ERROR_TYPE, 1);
+        msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
     }
 
     print_result(data_output, N, N, goal);
