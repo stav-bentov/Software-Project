@@ -334,13 +334,8 @@ void matrix_multiplication(int N, double **src1, double **src2, double **dst)
                 temp[i][j] += src1[i][k] * src2[k][j];
         }
     }
-    for (i = 0; i < N; i++)
-    { /* dst = temp */
-        for (j = 0; j < N; j++)
-        {
-            dst[i][j] = temp[i][j];
-        }
-    }
+    /*zChange - function instead of loops*/
+    matrix_copy(N, dst, temp);
 
     free_memory(temp, N);
 }
