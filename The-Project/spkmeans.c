@@ -81,7 +81,7 @@ double **set_T(double **U,int N,int K)
     int i,j,q;
     double sum;
     double **T=matrix_allocation(N,K);
-    if(U==NULL)
+    if(T==NULL)
         return NULL;
     for(i=0;i<N;i++)
     {
@@ -193,16 +193,27 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
     }
     lnorm = I_matrix(N);
     if (lnorm == NULL)
+    {
+        free_memory(mul1,N);
+        free_memory(mul2,N);
         return NULL;
+    }
 
     cal_D12(diag_mat, N);
     matrix_multiplication(N,diag_mat,adj_mat,mul1);
     if(mul1==NULL)
+    {
+        free_memory(mul1,N);
+        free_memory(mul2,N);
+        free_memory(lnorm,N);
         return NULL;
+    }
     matrix_multiplication(N,mul1,diag_mat,mul2);
     if(mul2==NULL)
     {
         free_memory(mul1,N);
+        free_memory(mul2,N);
+        free_memory(lnorm,N);
         return NULL;
     }
     calc_sub(N, lnorm, mul2);
