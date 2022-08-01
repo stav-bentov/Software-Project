@@ -134,7 +134,7 @@ double **adjacency_matrix(double **data_points, int dimension, int N)
     {
         for (j = i; j < N; j++)
         {
-            adj_mat[i][j] = (i == j) ? 0 : exp((calc_euclidean_norm(data_points[i], data_points[j], dimension)) / (-2));
+            adj_mat[i][j] = (i == j) ? 0 : (exp((calc_euclidean_norm(data_points[i], data_points[j], dimension)) / (-2)));
             adj_mat[j][i] = adj_mat[i][j];
         }
     }
@@ -252,7 +252,7 @@ double **I_matrix(int N)
 
 double **jacobi_algo(int N, double **A)
 {/* TODO: check if can erase NULL*/
-    /* SChange:*/
+    /* SChange: earesed NULL..*/
     int counter = 0;
     int iPointer, jPointer;
     double Aij,cPointer, sPointer;/*pivot element, s,c*/
