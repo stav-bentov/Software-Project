@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-/*#include <Python/Python.h>*/
+#include <Python/Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -590,7 +590,7 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
     }
 }
 
-double **run_goal(enum Goal goal, double **data_input, int N, int D)
+double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
 {
     double **data_output, **wam_matrix, **ddg_matrix;
 
@@ -636,6 +636,65 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D)
     return NULL;
 }
 
+
+static PyObject* fit(PyObject *self,PyObject *args){
+
+    PyObject *Datapoints_PyObject; /*A matrix*/
+    PyObject *current_datapoint;
+    PyObject *current_double;
+    PyObject *returned_result;
+    PyObject *current_vector;
+
+    /* args= N, K, max_iter, A, epsilon*/
+    int N,K,D,i,j,rows;
+    double **Datapoints;
+    enum Goal goal;
+    double ** goal_result;
+    /*receiving args from Python program*/
+    if (!PyArg_ParseTuple(args, "iiiOi", &N, &K, &D, &Datapoints_PyObject, &goal)){/*todo check if goal sent from python is a number*/
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+    /* Set up Datapoints matrix*/
+    Datapoints = matrix_allocation(N, D); /* todo check if cols == D or N*/
+    if(Datapoints == NULL){
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+    for (i = 0; i < N; i++){
+        current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
+        /*Set up each of Datapoints vectors*/
+        for(j = 0; j < D; j++){
+            current_double=PyList_GetItem(current_datapoint,j);
+            Datapoints[i][j]=PyFloat_AsDouble(current_double);
+        }
+    }
+    rows = (goal == 4) ? N+1 : N;/*jacobi needs N+1 rows*/
+    goal_result = matrix_allocation(rows, D);
+    goal_result = run_goal(goal, Datapoints, N, D, K);
+    if(goal_result == NULL) /*todo check if thats how Stav wants it to be*/
+    {
+        PyErr_SetString(PyExc_RuntimeError, ERROR);
+        return NULL;
+    }
+
+    /* Convert result_matrix to an array list (python)*/
+
+    returned_result = PyList_New(rows);
+    for (i = 0; i < rows; ++i)
+    {
+        current_vector = PyList_New(D);
+        for (j = 0; j < D; j++)
+        {
+            PyList_SetItem(current_vector, j, Py_BuildValue("d", goal_result[i][j]));
+        }
+        PyList_SetItem(returned_result,i,Py_BuildValue("O",current_vector));
+    }
+    free_memory(Datapoints, N);
+    free_memory(goal_result, rows);
+    return returned_result;
+}
+
 int main(int argc, char *argv[])
 {
     char *file_name;
@@ -675,7 +734,7 @@ int main(int argc, char *argv[])
     set_input(ifp, data_input, N, D);
 
     /* set the goal's result in data_output*/
-    data_output = run_goal(goal, data_input, N, D);
+    data_output = run_goal(goal, data_input, N, D, 0);
     if (data_output == NULL)
     { /* an error has occurred*/
         free_memory(data_input, N);
