@@ -568,40 +568,20 @@ double **matrix_allocation(int num_rows, int num_cols)
 void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
 {
     int i, j;
-    char buffer[BUFFER_SIZE];
+    double curr_value;
     i = 0;
     j = 0;
-    /* TODO: checked- doesnt work on csv*/
-    /*double curr_value;
     for(i=0;i<num_rows;i++)
     {
         for (j = 0; j < num_cols; j++)
         {
-            if (fscanf(ifp, "%lf", &curr_value) == 1)
+            if(fscanf(ifp, "%lf", &curr_value)==1)
+                data_input[i][j] = curr_value;
+            else
             {
-                data_input[i][j] = (double)curr_value;
-                fgetc(ifp);
+                j--;
             }
-            printf("why? %f, \n",curr_value);
-        }
-    }*/
-
-    /* TODO: this one works for csv too but the other doesnt!, check if it's good..*/
-    while (fgets(buffer, BUFFER_SIZE, ifp))
-    {
-        char *curr_value = strtok(buffer, ",");
-        while (curr_value)
-        {
-            if (j == num_cols)
-            {
-                j = 0;
-                i++;
-                if (i == num_rows)
-                    break;
-            }
-            data_input[i][j] = atof(curr_value);
-            j++;
-            curr_value = strtok(NULL, ",");
+            fgetc(ifp);
         }
     }
 }
