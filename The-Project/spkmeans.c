@@ -292,7 +292,6 @@ double **jacobi_algo(int N, double **A)
     eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
     if (eigenvalues == NULL)
     {
-        /*todo- by Zohar: check if A is also needs to be freed here- who is A??*/
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
@@ -302,7 +301,7 @@ double **jacobi_algo(int N, double **A)
     }
 
     while ((MAX_ITER > counter) && (!check_convergence(N, A, A1) || (counter == 0)))
-    { /*todo check : even if check Convergence is true in the beginning, i want to do this while loop*/
+    {
         counter++;
         /*A = A1*/
         if (counter != 1)
@@ -456,7 +455,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
-    double signTheta = 1; /*todo check if sign(theta) is 0 / 1 or something else*/
+    double signTheta = 1;
     theta = (A[j][j] - A[i][i]) / (2 * A[i][j]);
 
     if (theta < 0)
@@ -467,7 +466,7 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 }
 
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
-{ /*todo check, maybe this function call is not necessary - complexity wise and no return val*/
+{
     int k, l;
 
     for (k = 0; k < N; ++k)
