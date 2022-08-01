@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
         free_memory(data_input, N);
         msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
     }
-    print_result(data_output, N, D, goal);
+    print_result(data_output, N, N, goal);
 
     fclose(ifp);
     exit(0);
