@@ -380,10 +380,8 @@ void matrix_copy(int N, double **dest_mat, double **src_mat)
 {
     int i, j;
 
-    for (i = 0; i < N; i++)
-    { /* rad-nr */
-        for (j = 0; j < N; j++)
-        { /* kolumn-nr */
+    for (i = 0; i < N; i++){
+        for (j = 0; j < N; j++){
             dest_mat[i][j] = src_mat[i][j];
         }
     }
@@ -505,14 +503,8 @@ double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors)
 
     for (i = 0; i < N; ++i)
         res[0][i] = eigenValues[i];
+    matrix_copy(N, &res[1], eigenVectors);
 
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < N; j++)
-        {
-            res[i + 1][j] = eigenVectors[i][j];
-        }
-    }
     return res;
 }
 
