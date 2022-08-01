@@ -46,19 +46,22 @@ void calc_sub(int N, double **A,double **B);
 double **I_matrix(int N);
 
 /* for main function*/
-double **run_goal(enum Goal goal,double **data_input,int N,int D);
+double **run_goal(enum Goal goal,double **data_input,int N,int D, int K);
 void print_result(double ** mat,int num_rows,int num_cols,enum Goal goal);
 void msg_and_exit(int error_type,int is_error);
 //int find_N_D(FILE* ifp,int find_who);
+void free_memory1(int N, int count, ...);
 void free_memory(double **ArrayToFree, int num_rows);
+static PyObject* fit(PyObject *self,PyObject *args);
+
 
 
 //static PyObject* fit_jacobi(PyObject *self,PyObject *args);
 double **jacobi_algo(int N, double **A);
 void matrix_copy(int N, double ** dest_mat, double ** src_mat);
 int check_convergence(int N, double **A, double **A1);
-double find_Aij(int N, double **A, int* iPointer, int* jPointer);
-void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer);
+void/* Zchange : turned it into a void func*/ find_Aij(int N, double **A, int* iPointer, int* jPointer);
+void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
 void matrix_multiplication(int N, double **src1, double **src2, double **dst);
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);

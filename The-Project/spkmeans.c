@@ -229,8 +229,8 @@ double **jacobi_algo(int N, double **A)
         if (counter != 1)
             matrix_copy(N, A, A1);
 
-        Aij = find_Aij(N, A, &iPointer, &jPointer);
-        find_c_s_t(A, Aij, iPointer, jPointer, &cPointer, &sPointer);
+        find_Aij(N, A, &iPointer, &jPointer);
+        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);
         calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);
         /*calc_A1(N, A, A1,cPointer,sPointer,iPointer,jPointer);gets A, c, s, i, j*/
 
@@ -364,7 +364,8 @@ int check_convergence(int N, double **A, double **A1)
     return 0;
 }
 
-double find_Aij(int N, double **A, int *iPointer, int *jPointer)
+/* Zchange : turned it into a void func*/
+void find_Aij(int N, double **A, int *iPointer, int *jPointer)
 { /* finds the off-diagonal element with the largest ABSOLUTE value*/
     int q, l;
     double maxElem = -DBL_MAX; /*todo change - be careful*/
@@ -382,10 +383,10 @@ double find_Aij(int N, double **A, int *iPointer, int *jPointer)
             }
         }
     }
-    return maxElem; /*value of Aij*/
 }
 
-void find_c_s_t(double **A, double aij, int i, int j, double *cPointer, double *sPointer)
+/* Zchange : got rid of Aij parameter*/
+void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
     double signTheta = 1; /*todo check if sign(theta) is 0 / 1 or something else*/
@@ -527,7 +528,7 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
     }
 }
 
-
+/* Zchange : new free memory function that also uses the old one*/
 void free_memory1(int N, int count, ...)
 {
     va_list list;
@@ -590,6 +591,7 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
     }
 }
 
+/* Zchange : added parameter K*/
 double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
 {
     double **data_output, **wam_matrix, **ddg_matrix;
@@ -637,6 +639,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
 }
 
 
+/* Zchange : fit function*/
 static PyObject* fit(PyObject *self,PyObject *args){
 
     PyObject *Datapoints_PyObject; /*A matrix*/
