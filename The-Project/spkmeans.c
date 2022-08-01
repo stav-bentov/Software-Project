@@ -203,7 +203,6 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
     matrix_multiplication(N,diag_mat,adj_mat,mul1);
     if(mul1==NULL)
     {
-        free_memory(mul1,N);
         free_memory(mul2,N);
         free_memory(lnorm,N);
         return NULL;
@@ -211,7 +210,6 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
     matrix_multiplication(N,mul1,diag_mat,mul2);
     if(mul2==NULL)
     {
-        free_memory(mul1,N);
         free_memory(mul2,N);
         free_memory(lnorm,N);
         return NULL;
