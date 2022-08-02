@@ -269,7 +269,7 @@ double **jacobi_algo(int N, double **A)
     /* SChange: earesed NULL..*/
     int counter = 0;
     int iPointer, jPointer;
-    double Aij,cPointer, sPointer;/*pivot element, s,c*/
+    double cPointer, sPointer;/*pivot element, s,c*/
     double **A1,**V,**curr_P,**jacobi_result;/* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
 
@@ -317,7 +317,8 @@ double **jacobi_algo(int N, double **A)
         calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);
         
         transpose(curr_P, N);                     /* P -> P_transpose */
-        matrix_multiplication(N, curr_P, A, A1);  /* A' = P_transpose*A */
+        /*matrix_multiplication(N, curr_P, A, A1);*/  /* A' = P_transpose*A */
+        A1 = calc_mul(N, curr_P, A); /* todo decide between calc_mul, matrix_multiplication*/
         if (A1 == NULL){ /* it is reachable!*/
             /*todo decide which free memory to use 1 or regular*/
             free(eigenvalues);
@@ -327,7 +328,8 @@ double **jacobi_algo(int N, double **A)
             return NULL;
         }
         transpose(curr_P, N);                     /* P_transpose -> P */
-        matrix_multiplication(N, A1, curr_P, A1); /* A' = (P_transpose*A)*P */
+        /*matrix_multiplication(N, A1, curr_P, A1);*/ /* A' = (P_transpose*A)*P */
+        A1 = calc_mul(N, A1, curr_P);
         if (A1 == NULL){ /* it is reachable!*/
             free(eigenvalues);
             free_memory(V, N);
@@ -335,7 +337,8 @@ double **jacobi_algo(int N, double **A)
             /*free_memory1(N, 2, V, curr_P);*/
             return NULL;
         }
-        matrix_multiplication(N, V, curr_P, V);   /* V = V * curr_P*/
+        /*matrix_multiplication(N, V, curr_P, V);   *//* V = V * curr_P*/
+        V = calc_mul(N, V, curr_P);
         if (V == NULL){ /* it is reachable!*/
             free(eigenvalues);
             free_memory(A1, N);
@@ -344,11 +347,11 @@ double **jacobi_algo(int N, double **A)
             return NULL;
         }
         /*TODO!!: change to one func and think if to use free_memory1*/
-        //transpose(curr_P, N);                     /* P -> P_transpose */
-        //matrix_multiplication(N, curr_P, A, A1);  /* A' = P_transpose*A */
-        //transpose(curr_P, N);                     /* P_transpose -> P */
-        //matrix_multiplication(N, A1, curr_P, A1); /* A' = (P_transpose*A)*P */
-        //matrix_multiplication(N, V, curr_P, V);   /* V = V * curr_P*/
+        /*transpose(curr_P, N);                     *//* P -> P_transpose */
+        /*matrix_multiplication(N, curr_P, A, A1);  *//* A' = P_transpose*A */
+        /*transpose(curr_P, N);                     *//* P_transpose -> P */
+        /*matrix_multiplication(N, A1, curr_P, A1); *//* A' = (P_transpose*A)*P */
+        /*matrix_multiplication(N, V, curr_P, V);   *//* V = V * curr_P*/
         /*TODO: change to one func*/
     }
 
@@ -498,7 +501,7 @@ void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1)
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors)
 {
     double **res = NULL;
-    int i, j;
+    int i;
     res = matrix_allocation(N + 1, N);
     if(res==NULL)
     {
@@ -749,3 +752,4 @@ int main(int argc, char *argv[])
     fclose(ifp);
     exit(0);
 }
+
