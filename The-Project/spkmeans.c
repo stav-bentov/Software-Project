@@ -216,7 +216,7 @@ void cal_D12(double **diag_mat, int N)
 double **calc_mul(int N, double **A, double **B)
 { 
     /* C=A*B*/
-    int i, j, k, return_value;
+    int i, j, k;
     double **C = matrix_allocation(N, N);
     if (C == NULL)
         return NULL;
