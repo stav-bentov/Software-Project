@@ -179,14 +179,15 @@ double **diagonal_matrix(double **adj_mat, int N)
 
 /* ================================== The Normalized Graph Laplacian ================================== */
 double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
-{ /* TODO: handle memory- match with zohar*/
+{
     double **mul1, **mul2, **lnorm;
 
-    mul1=matrix_allocation(N,N);
-    if(mul1==NULL)
+    cal_D12(diag_mat, N);
+    mul1 = calc_mul(N, diag_mat, adj_mat);
+    if (mul1 == NULL)
         return NULL;
-    mul2=matrix_allocation(N,N);
-    if(mul2==NULL)
+    mul2 = calc_mul(N, mul1, diag_mat);
+    if (mul2 == NULL)
     {
         free_memory(mul1,N);
         return NULL;
@@ -198,24 +199,7 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
         free_memory(mul2,N);
         return NULL;
     }
-
-    cal_D12(diag_mat, N);
-    matrix_multiplication(N,diag_mat,adj_mat,mul1);
-    if(mul1==NULL)
-    {
-        free_memory(mul2,N);
-        free_memory(lnorm,N);
-        return NULL;
-    }
-    matrix_multiplication(N,mul1,diag_mat,mul2);
-    if(mul2==NULL)
-    {
-        free_memory(mul2,N);
-        free_memory(lnorm,N);
-        return NULL;
-    }
     calc_sub(N, lnorm, mul2);
-
     return lnorm;
 }
 
@@ -229,6 +213,27 @@ void cal_D12(double **diag_mat, int N)
     }
 }
 
+double **calc_mul(int N, double **A, double **B)
+{ 
+    /* C=A*B*/
+    int i, j, k, return_value;
+    double **C = matrix_allocation(N, N);
+    if (C == NULL)
+        return NULL;
+
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            C[i][j] = 0;
+            for (k = 0; k < N; k++)
+            {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    return C;
+}
 
 /* make subtraction from A and return *updated* A*/
 void calc_sub(int N, double **A, double **B)
