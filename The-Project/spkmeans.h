@@ -2,7 +2,7 @@
 #define SOFTWARE_PROJECT_SPKMEANS_H
 
 #define PY_SSIZE_T_CLEAN
-/*#include <Python/Python.h>*/
+#include <Python/Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ enum Goal
   spk_g2=6
 };
 
-/* Function's declaretions*/
+/* Function's declarations*/
 
 /*Wam,Ddg and Lnorm's functions*/
 double **adjacency_matrix(double **data_points, int dimension, int N);
@@ -77,6 +77,7 @@ int check_convergence(int N, double **A, double **A1);
 void find_Aij(int N, double **A, int *iPointer, int *jPointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
+double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn);
 void matrix_multiplication(int N, double **src1, double **src2, double **dst);
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
 void transpose(double **mat, int N);
@@ -86,7 +87,7 @@ double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
 static int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
 static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
 static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
-static void free_memory(double **ArrayToFree, int size);
+void free_memory(double **ArrayToFree, int size);
 static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
 static PyObject* fit(PyObject *self,PyObject *args);
 #endif

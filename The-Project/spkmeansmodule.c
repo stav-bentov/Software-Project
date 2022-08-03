@@ -1,5 +1,6 @@
 #include "spkmeans.h"
 
+
 static PyObject* fit(PyObject *self,PyObject *args){
 
     PyObject *Datapoints_PyObject; /*A matrix*/
@@ -8,7 +9,7 @@ static PyObject* fit(PyObject *self,PyObject *args){
     PyObject *returned_result;
     PyObject *current_vector;
 
-    /* (Goal= wam, ddg, lnorm, jacpbi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
+    /* (Goal= wam, ddg, lnorm, jacobi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
     /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal, Centroids*/
     /* args= N, K, D, Datapoints/matrix, goal, Centroids*/ 
     int N,K,D,i,j,rows, return_value;
@@ -50,7 +51,7 @@ static PyObject* fit(PyObject *self,PyObject *args){
     else
     {
         goal_result = run_goal(goal, Datapoints, N, D, K);
-        if(goal_result == NULL) /*todo check if thats how Stav wants it to be*/
+        if(goal_result == NULL) /*todo check if that's how Stav wants it to be*/
         {
             free_memory(Datapoints,N);
             PyErr_SetString(PyExc_RuntimeError, ERROR);

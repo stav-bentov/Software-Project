@@ -3,7 +3,15 @@ import math
 import numpy as np
 import pandas as pd
 import sys
+from enum import Enum
 import mykmeanssp
+
+class goal(Enum):
+    spk = 1
+    wam = 2
+    ddg = 3
+    lnorm = 4
+    jacobi = 5
 
 def print_output(returnFromFit,N,goal):  # todo check if jacobi also requires commas and also print as columns or rows!
     output_res = ""
@@ -23,11 +31,8 @@ def print_output(returnFromFit,N,goal):  # todo check if jacobi also requires co
 # '''=========================get data from file========================='''
 def getNDataPoints(filename, goal):
     try:
-        if goal == "jacobi":
-            with open('argv[3]', 'r') as f:  # todo check of course
-                return [[float(num) for num in line.split(',')] for line in f]
-        else: # goal is not jacobi
-            return pd.read_csv(filename, header=None)  # Put data from file to a data array
+        data = pd.read_csv(filename, header=None)  # Put data from file to a data array
+        return data.to_numpy()
     except:
         print("An Error Has Occurred")
         sys.exit()
@@ -55,9 +60,15 @@ def checkInput(given_input, argLen): #todo it in main func (check if k is an int
     if (argLen != 4):
         print("Invalid Input!")
         sys.exit()
-    #checking if K is a non-negative integer
-    isValid = given_input[1].isnumeric()
-    if(int(given_input[1]) < 0 or isValid == False):
+    # check K: K isn't an integer or K is a negative integer
+    is_valid = given_input[1].isnumeric()
+    if is_valid:
+        is_valid = int(given_input[1]) < 0
+    # check enum: one of the 5 given options
+    if is_valid:
+        is_valid = given_input[2] in [curr_goal.name for curr_goal in goal]
+
+    if not is_valid:
         print("Invalid Input!")
         sys.exit()
 
@@ -125,10 +136,6 @@ def main(argv):
     D=data_points_array.shape[1]
 
     if K > N:
-        print("Invalid Input!")
-        sys.exit()
-
-    if(goal != "jacobi" and goal != "spk" and goal != "wam" and goal != "ddg" and goal != "lnorm"):
         print("Invalid Input!")
         sys.exit()
 
