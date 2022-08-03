@@ -7,7 +7,9 @@ static PyObject* fit(PyObject *self,PyObject *args){
     PyObject *returned_result;
     PyObject *current_vector;
 
-    /* args= N, K, max_iter, A, epsilon*/
+    /* (Goal= wam, ddg, lnorm, jacpbi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
+    /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal*/
+    /* args= N, K, D, Datapoints/matrix, goal*/ 
     int N,K,D,i,j,rows;
     double **Datapoints;
     enum Goal goal;
@@ -31,17 +33,24 @@ static PyObject* fit(PyObject *self,PyObject *args){
             Datapoints[i][j]=PyFloat_AsDouble(current_double);
         }
     }
-    rows = (goal == 4) ? N+1 : N;/*jacobi needs N+1 rows*/
-    goal_result = matrix_allocation(rows, D);
-    goal_result = run_goal(goal, Datapoints, N, D, K);
+    rows = (goal == JACOBI || goal==SPK_EX2) ? (N+1) : N;/*jacobi needs N+1 rows*/
+    
+    if(goal==SPK_EX2)
+    {
+        goal_result=kmeans();
+    }
+    else
+    {
+        goal_result = run_goal(goal, Datapoints, N, D, K);
+    }
     if(goal_result == NULL) /*todo check if thats how Stav wants it to be*/
     {
+        free_memory(Datapoints,N);
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
 
     /* Convert result_matrix to an array list (python)*/
-
     returned_result = PyList_New(rows);
     for (i = 0; i < rows; ++i)
     {

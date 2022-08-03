@@ -589,6 +589,7 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
             {
                 j--;
             }
+            printf("%f\n",data_input[i][j]);
             fgetc(ifp);
         }
     }
@@ -632,7 +633,6 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
     {
         for (j = 0; j < num_cols; j++)
         {
-            /*SChange- think of a new term!!!! TODO!!!!!!!*/
             if (j == num_cols - 1)
             {
                 printf("%.4f", mat[i][j]);
