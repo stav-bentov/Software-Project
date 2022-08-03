@@ -268,7 +268,7 @@ double **jacobi_algo(int N, double **A)
 {/* TODO: check if can erase NULL*/
     /* SChange: earesed NULL..*/
     int counter = 0;
-    int iPointer, jPointer;
+    int iPointer, jPointer,max_iter;
     double cPointer, sPointer;/*pivot element, s,c*/
     double **A1,**V,**curr_P,**jacobi_result;/* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
@@ -305,7 +305,7 @@ double **jacobi_algo(int N, double **A)
         return NULL;
     }
 
-    while ((MAX_ITER > counter) && (!check_convergence(N, A, A1) || (counter == 0)))
+    while ((MAX_ITER_JACOBI > counter) && (!check_convergence(N, A, A1) || (counter == 0)))
     {
         counter++;
         /*A = A1*/
@@ -435,7 +435,7 @@ int check_convergence(int N, double **A, double **A1)
             off_A1_squared += i == j ? 0 : pow(A1[i][j], 2);
         }
     }
-    if (off_A_squared - off_A1_squared <= EPSILON)
+    if (off_A_squared - off_A1_squared <= EPSILON_JACOBI)
         return 1;
     return 0;
 }

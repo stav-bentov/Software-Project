@@ -19,13 +19,16 @@
 #define BUFFER_SIZE 1024
 #define INVALID_TYPE 0
 #define ERROR_TYPE 1
-#define EPSILON 1.0 * pow(10, -5)
-#define MAX_ITER 100
+#define EPSILON_JACOBI 1.0 * pow(10, -5)
+#define MAX_ITER_JACOBI 100
+#define EPSILON_KMEANS 0
+#define MAX_ITER_KMEANS 300
 #define WAM 1
 #define DDG 2
 #define LNORM 3
 #define JACOBI 4
 #define SPK 5
+#define SPK_EX2 6
 #define INVALID_TYPE 0
 #define ERROR_TYPE 1
 
@@ -35,12 +38,13 @@ enum Goal
   ddg_g = 2,
   lnorm_g = 3,
   jacobi_g = 4,
-  spk_g = 5
+  spk_g = 5,
+  spk_g2=6
 };
 
 /* Function's declaretions*/
 
-/* for wam,ddg,lnorm*/
+/*Wam,Ddg and Lnorm's functions*/
 double **adjacency_matrix(double **data_points, int dimension, int N);
 double calc_euclidean_norm(double *x, double *y, int dimension);
 double **diagonal_matrix(double **adj_mat, int N);
@@ -58,7 +62,7 @@ int sort_by_p(double **mat, int l, int r);
 int eigengap_heuristic(double *eigenvalues, int N);
 double **set_T(double **U, int N, int K);
 
-/* for main function*/
+/* (C) main's functions*/
 double **run_goal(enum Goal goal, double **data_input, int N, int D, int K);
 void print_result(double **mat, int num_rows, int num_cols, enum Goal goal);
 void msg_and_exit(int error_type, int is_error);
@@ -66,6 +70,7 @@ int find_N_D(FILE *ifp, int find_who);
 void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols);
 void free_memory(double **ArrayToFree, int num_rows);
 
+/* Jacobi's functions*/
 double **jacobi_algo(int N, double **A);
 void matrix_copy(int N, double **dest_mat, double **src_mat);
 int check_convergence(int N, double **A, double **A1);
@@ -77,4 +82,11 @@ void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
 void transpose(double **mat, int N);
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
 
+/* Kmeans algorithm's functions from ex2*/
+static int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
+static int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
+static int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
+static void free_memory(double **ArrayToFree, int size);
+static void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
+static PyObject* fit(PyObject *self,PyObject *args);
 #endif

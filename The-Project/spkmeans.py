@@ -10,7 +10,7 @@ def print_output(returnFromFit,N,goal):  # todo check if jacobi also requires co
     no_of_rows=N
     if(goal=="jacobi"):
         no_of_rows+=1
-
+    
     for i in range(no_of_rows):
         for j in range(N):
             output_res += str('%.4f' %(returnFromFit[i][j]))  # todo check with Stav about %
@@ -32,7 +32,7 @@ def getNDataPoints(filename, goal):
         print("An Error Has Occurred")
         sys.exit()
 
-def printOutput(returnFromFit,dimension,K):
+def print_output_spk(returnFromFit,dimension,K):
     output_res=""
     # Printing first row - indices of K randomly chosen centroids (initial centroids)
     for i in range(K):
@@ -61,18 +61,15 @@ def checkInput(given_input, argLen): #todo it in main func (check if k is an int
         print("Invalid Input!")
         sys.exit()
 
-# ''' spk from ex2'''#
-def kMeans_init(K, mergeDf):
+''' ========================= spk from ex 2 ========================='''
+def kMeans_init(K, data_points_array):
 
     Centroids_array = []  # Saves the centroids u1, ... , uK
 
-    mergeDf = mergeDf.sort_values(by=[0])
-    data_points_array = mergeDf.to_numpy()  # Saves the data points
-
     N = len(data_points_array)
-    if (K > N):
+    '''if (K > N):
         print("Invalid Input!")
-        sys.exit()
+        sys.exit()''' #todo- needed?
 
     D_array = np.array([0.0 for i in range(N+1)])
     Pr_array = np.array([0.0 for i in range(N)]) # Pr_array[i] = probability of
@@ -100,104 +97,20 @@ def calc(x, y): # used to calculate norm
     z = np.subtract(x, y)
     return np.sum(np.multiply(z, z))
 
-
-def isfloat(num):# check if a number is a float, used for epsilon
-    try:
-        float(num)
-        return True
-    except ValueError:
-        return False
-
-
-def checkInput(given_input, argLen):
-    # Validate that the command line arguments are in correct format
-    if (argLen < 5) or (argLen > 6):
-        print("Invalid Input!")
-        sys.exit()
-
-    isValid = True
-
-    # Check each argument
-    for i in range(argLen):
-        if argLen == 6: # Argument maxIter has been given by user
-            # Checking if first 2 arguments (K, maxIter) are integers
-            if(i == 1 or i == 2):
-                isValid = given_input[i].isnumeric()
-                # Checking max_iter>0 and k>0
-                if (isValid):
-                    if(int(given_input[i]) <= 0):
-                        isValid = False
-            # checking if epsilon is float and =>0
-            if (i == 3):
-                isValid = isfloat(given_input[i])
-                if(isValid):
-                    if(float(given_input[i])<0):
-                        isValid = False
-        # arglen == 5, argument maxIter has not been given by user 
-        else:
-            if(i == 1):
-                isValid = given_input[i].isnumeric()
-                # Checking k>0
-                if(isValid):
-                    if(int(given_input[i])<=0):
-                        isValid=False
-            # Checking epsilon is float and =>0
-            if(i == 2):
-                isValid = isfloat(given_input[i])
-                if(isValid):
-                    if(float(given_input[i])<0):
-                        isValid=False
-        # One of the checks above failed
-        if(isValid == False):
-            print("Invalid Input!")
-            sys.exit()
-
-
-def printOutput(returnFromFit,dimension,K):
-    output_res=""
-    # Printing first row - indices of K randomly chosen centroids (initial centroids)
-    for i in range(K):
-        output_res += str(int(returnFromFit[0][i])) # returnFromFit[0] = randomly chosen centroids indices
-        if (i != K-1):
-            output_res += ","
-    output_res += "\n"
-
-    # Printing the K calculated final centroids
-    for i in range(K):
-        for j in range(dimension):
-            output_res+=str('%.4f' %(returnFromFit[1][i][j])) # returnFromFit[1] = centroid got from kmenassp.c
-            if (j!=dimension-1):
-                output_res += ","
-        output_res += "\n"
-    print(output_res)
-
-def callFit(N,K, max_iter, epsilon, merge_data, centroids,dimension): #calling fit function from kmeans.c
+def callFit(N, K, dimension, data_points, centroids, goal): #calling fit function from kmeans.c
     # Get arguments for fit function
-    datapoints = merge_data.iloc[: , 1:]
     centroids=np.array(centroids)
     centroids_indices=centroids[:,0]
     centroids=centroids[:,1:]
-    datapoints_list=datapoints.values.tolist()
     centroids_list=centroids.tolist()
 
     # N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
     try:
-        final_centroids = mykmeanssp.fit(N,K,max_iter,datapoints_list,centroids_list,epsilon,dimension)
+        final_centroids = mykmeanssp.fit(N,K,dimension,data_points,goal,centroids_list)
         return (centroids_indices,final_centroids)
     except:
         print("An Error Has Occurred")
         sys.exit()
-
-def mergeInputs(input_1,input_2):
-    try:
-        data1= pd.read_csv(input_1, header=None) # Put data from file_1 to a data1
-        data2= pd.read_csv(input_2, header=None) # Put data from file_2 to a data2
-        mergeDf=pd.merge(data1, data2, on=0)  # Merge (inner join) the two data_frames into one, based on mutual indices
-    except:
-        print("An Error Has Occurred")
-        sys.exit()
-    return mergeDf
-
 
 def main(argv):
     '''=========================Checking input========================='''
@@ -224,6 +137,10 @@ def main(argv):
         if(goal!="spk"):
             print_output(goal_matrix,N,goal)
         else:
+            if(K==0):
+                K=len(goal_matrix[0])
+            centroids= kMeans_init(K, goal_matrix)
+            print_output_spk(callFit(N,K,data_points_array,centroids,K),K,K)
             
     except:
         print("An Error Has Occurred")

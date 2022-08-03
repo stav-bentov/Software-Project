@@ -1,3 +1,4 @@
+#include "spkmeans.h"
 
 static PyObject* fit(PyObject *self,PyObject *args){
 
@@ -8,14 +9,15 @@ static PyObject* fit(PyObject *self,PyObject *args){
     PyObject *current_vector;
 
     /* (Goal= wam, ddg, lnorm, jacpbi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
-    /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal*/
-    /* args= N, K, D, Datapoints/matrix, goal*/ 
-    int N,K,D,i,j,rows;
-    double **Datapoints;
+    /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal, Centroids*/
+    /* args= N, K, D, Datapoints/matrix, goal, Centroids*/ 
+    int N,K,D,i,j,rows, return_value;
+    double **Datapoints, **Centroids;
     enum Goal goal;
     double ** goal_result;
+
     /*receiving args from Python program*/
-    if (!PyArg_ParseTuple(args, "iiiOi", &N, &K, &D, &Datapoints_PyObject, &goal)){/*todo check if goal sent from python is a number*/
+    if (!PyArg_ParseTuple(args, "iiiOiO", &N, &K, &D, &Datapoints_PyObject, &goal, &Centroids)){/*todo check if goal sent from python is a number*/
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
@@ -33,21 +35,28 @@ static PyObject* fit(PyObject *self,PyObject *args){
             Datapoints[i][j]=PyFloat_AsDouble(current_double);
         }
     }
-    rows = (goal == JACOBI || goal==SPK_EX2) ? (N+1) : N;/*jacobi needs N+1 rows*/
     
     if(goal==SPK_EX2)
     {
-        goal_result=kmeans();
+        return_value=kMeans(N,K,Datapoints,Centroids,D);
+        if(return_value==FAIL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
+        goal_result=Centroids;
+        rows=K;
     }
     else
     {
         goal_result = run_goal(goal, Datapoints, N, D, K);
-    }
-    if(goal_result == NULL) /*todo check if thats how Stav wants it to be*/
-    {
-        free_memory(Datapoints,N);
-        PyErr_SetString(PyExc_RuntimeError, ERROR);
-        return NULL;
+        if(goal_result == NULL) /*todo check if thats how Stav wants it to be*/
+        {
+            free_memory(Datapoints,N);
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
+        rows = (goal == JACOBI) ? (N+1) : N;/*jacobi needs N+1 rows*/
     }
 
     /* Convert result_matrix to an array list (python)*/
