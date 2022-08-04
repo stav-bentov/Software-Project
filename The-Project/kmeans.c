@@ -1,5 +1,4 @@
 #include "spkmeans.h"
-/*#include <Python.h>*/
 
 int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
 {
@@ -94,7 +93,7 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
 /* Gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K)
 {
-    int i, j;
+    int i;
     double e_norm;
 
     /*Calculate euclidean norm for each centroid*/

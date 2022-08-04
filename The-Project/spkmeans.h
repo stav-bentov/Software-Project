@@ -2,7 +2,6 @@
 #define SOFTWARE_PROJECT_SPKMEANS_H
 
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -54,7 +53,7 @@ void check_error(int bool_error);
 double **calc_mul(int N, double **A, double **B);
 void calc_sub(int N, double **A, double **B);
 double **I_matrix(int N);
-double **spk_algo(double **lnorm, int N, int K);
+double **spk_algo(double **lnorm, int N, int *K);
 void swap(double **mat, int index_1, int index_2);
 void sort_matrix_values(double **mat, int l, int r);
 int sort_by_p(double **mat, int l, int r);
@@ -82,10 +81,8 @@ void transpose(double **mat, int N);
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
 
 /* Kmeans algorithm's functions from ex2*/
-int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
-int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K,float epsilon);
+/*static int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
+int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K);
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
-void free_memory(double **ArrayToFree, int size);
-void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
-static PyObject* fit(PyObject *self,PyObject *args);
+void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);*/
 #endif

@@ -26,13 +26,13 @@ double **spk_algo(double **lnorm, int N, int *K)
     transpose(eigenvectors, N);
     /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
     U = eigenvectors;
-    T = set_T(U, N, K);
+    T = set_T(U, N, *K);
     if (T == NULL)
     {
         free_memory(jacobi_output, N + 1);
         return NULL;
     }
-    print_result(T,N,K,spk_g);
+    print_result(T,N,*K,spk_g);
     return T;
 }
 

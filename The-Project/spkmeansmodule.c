@@ -1,3 +1,4 @@
+#include <Python.h>
 #include "spkmeans.h"
 
 static PyObject *fit(PyObject *self, PyObject *args)
@@ -11,7 +12,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     PyObject *current_centroid;
 
     /* (Goal= wam, ddg, lnorm, jacobi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
-    /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal, Centroids*/
+    /* (Goal= spk(2)): args= N, K, D, Datapoints/matrix, goal, Centroids*/
     /* args= N, K, D, Datapoints/matrix, goal, Centroids*/
     int N, K, D, i, j, rows, cols, return_value;
     double **Datapoints, **Centroids;
@@ -24,7 +25,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
-    /* Set up Datapoints and Centroids'smatrix*/
+    /* Set up Datapoints and Centroids's matrix*/
     Datapoints = matrix_allocation(N, D);
     if (Datapoints == NULL)
     {
