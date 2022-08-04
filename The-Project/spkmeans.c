@@ -460,6 +460,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     int q, l;
     double maxElem = -DBL_MAX; /*todo change - be careful*/
 
+
     for (q = 0; q < N; ++q){
         for (l = q+1; l < N; ++l){
             if (fabs(A[q][l]) > maxElem){
