@@ -3,20 +3,20 @@
 /* ================================== SPK algorithm steps 1-5 ==================================*/
 
 /* Make 3-5 steps from "The Normalized Spectral Clustering Algorithm", python gets matrix T as N points and run K-means algorithm*/
-double **spk_algo(double **lnorm, int N, int K)
+double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
     double **jacobi_output, **U, **eigenvectors, **T;
     jacobi_output = jacobi_algo(N, lnorm);
-
+    print_result(jacobi_output,N,N,jacobi_g);
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
     sort_matrix_values(jacobi_output, 0, N - 1);
 
-    if (K == 0)
+    if (*K == 0)
     { /* The Eigengap Heuristic*/
-        K = eigengap_heuristic(jacobi_output[0], N);
-        if (K <= 1)
+        eigengap_heuristic(jacobi_output[0], N, K);
+        if (*K <= 1)
         {
             free_memory(jacobi_output, N + 1);
             return NULL;
@@ -32,6 +32,7 @@ double **spk_algo(double **lnorm, int N, int K)
         free_memory(jacobi_output, N + 1);
         return NULL;
     }
+    print_result(T,N,K,spk_g);
     return T;
 }
 
@@ -108,22 +109,20 @@ double **set_T(double **U, int N, int K)
     return T;
 }
 
-int eigengap_heuristic(double *eigenvalues, int N)
+void eigengap_heuristic(double *eigenvalues, int N, int *K)
 { /* lnorm formed as a decreasing ordered eigenvalues*/
-    int i, K;
+    int i;
     /* TODO: what to do if the number of points is 1?*/
     double curr_gap = DBL_MIN;
-    K = 1;
     /* lmda(1)= E[N-1]>=lmda(2)=E[N-2]>=...>=lmda(n/2)=E[N-(N/2)]>=0*/
     for (i = 1; i <= (int)(N / 2); i++)
     {
         if (curr_gap < fabs(eigenvalues[N - i] - eigenvalues[N - i - 1]))
         {
             curr_gap = fabs(eigenvalues[i] - eigenvalues[i - 1]);
-            K = i;
+            *K = i;
         }
     }
-    return K;
 }
 /* ================================== Done SPK ==================================*/
 
@@ -279,6 +278,10 @@ double **jacobi_algo(int N, double **A)
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
 
+    printf("in jacobi:\n");
+    printf("print input:\n");
+    print_result(A,N,N,lnorm_g);
+
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
     { /* an error occurred- no need to free*/
@@ -359,6 +362,10 @@ double **jacobi_algo(int N, double **A)
         /*free_memory1(N, 3, A1, V, curr_P);*/
         free(eigenvalues);
     }
+
+    printf("print output:\n");
+    print_result(jacobi_result,N,N,jacobi_g);
+
     return jacobi_result;
 }
 
@@ -659,7 +666,7 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
     }
 }
 
-double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
+double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 {
     double **data_output, **wam_matrix, **ddg_matrix, **lnorm_matrix;
 
@@ -679,6 +686,10 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
         return data_output;
 
     wam_matrix = data_output;
+
+    printf("Done WAM\n");
+    print_result(wam_matrix,N,N,wam_g);
+
     /* run DDG*/
     data_output = diagonal_matrix(wam_matrix, N);
     if (data_output == NULL)
@@ -690,6 +701,10 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
         return data_output;
 
     ddg_matrix = data_output;
+
+    printf("Done DDG\n");
+    print_result(ddg_matrix,N,N,ddg_g);
+
     /* run LNORM*/
     data_output = laplacian_matrix(ddg_matrix, wam_matrix, N);
     if (data_output == NULL)
@@ -703,6 +718,10 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
 
     /* SChange*/
     lnorm_matrix = data_output;
+
+    printf("Done LNORM\n");
+    print_result(lnorm_matrix,N,N,lnorm_g);
+
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);
     if (data_output == NULL)
@@ -718,10 +737,11 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int K)
 int main(int argc, char *argv[])
 {
     char *file_name;
-    int N, D;
+    int N, D, K; /*todo- delete K*/
     double **data_input, **data_output;
     FILE *ifp;
     enum Goal goal = 0;
+    K=0;
 
     /* invalid number of arguments*/
     msg_and_exit(INVALID_TYPE, argc != 3);
@@ -754,7 +774,7 @@ int main(int argc, char *argv[])
     set_input(ifp, data_input, N, D);
 
     /* set the goal's result in data_output*/
-    data_output = run_goal(goal, data_input, N, D, 0);
+    data_output = run_goal(goal, data_input, N, D, &K);
     if (data_output == NULL)
     { /* an error has occurred*/
         free_memory(data_input, N);

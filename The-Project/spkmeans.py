@@ -1,28 +1,27 @@
 import math
-
 import numpy as np
 import pandas as pd
 import sys
 from enum import Enum
-import mykmeanssp
+import my_spkmeans
 
 
-class goal(Enum):
-    spk = 1
-    wam = 2
-    ddg = 3
-    lnorm = 4
-    jacobi = 5
+class Goal(Enum):
+    wam = 1
+    ddg = 2
+    lnorm = 3
+    jacobi = 4
+    spk = 5
+    spk_ex2 = 6
 
-
-# todo check if jacobi also requires commas and also print as columns or rows!
+# each goal's output (except spk) is a matrix N*N (wam,ddg,lnorm) or (N+1)*N (jacobi)
 def print_output(returnFromFit, N, goal):
     output_res = ""
-    no_of_rows = N
-    if(goal == "jacobi"):
-        no_of_rows += 1
+    num_rows = N
+    if(goal == Goal.jacobi):
+        num_rows += 1
 
-    for i in range(no_of_rows):
+    for i in range(num_rows):
         for j in range(N):
             # todo check with Stav about %
             output_res += str('%.4f' % (returnFromFit[i][j]))
@@ -31,20 +30,16 @@ def print_output(returnFromFit, N, goal):
         output_res += "\n"
     print(output_res)
 
-# todo return list
-# '''=========================get data from file========================='''
-
-
-def get_goal_input(filename, goal):
+# return data's matrix, N (=number of points/ number of rows), D (=point's dimension/ number of cols)
+def get_goal_input(filename):
     try:
-        # Put data from file to a data array
         data = pd.read_csv(filename, header=None)
-        return data.to_numpy()
+        return data.to_numpy(), data.shape[0], data.shape[1]
     except:
         print("An Error Has Occurred")
         sys.exit()
 
-
+# spk's output is like in ex2- K indexs and centroids
 def print_output_spk(returnFromFit, dimension, K):
     output_res = ""
     # Printing first row - indices of K randomly chosen centroids (initial centroids)
@@ -65,25 +60,23 @@ def print_output_spk(returnFromFit, dimension, K):
         output_res += "\n"
     print(output_res)
 
-# '''=========================checking input========================='''
-
-
-# todo it in main func (check if k is an int + >=0 and that argv[2] is in enum list)
+# gets the input, exits if: arglen!=4 or k is'nt a number, or k is negative/0/1. return K,goal
 def check_input(given_input, argLen):
     if (argLen != 4):
         print("Invalid Input!")
         sys.exit()
-    # check K: K isn't an integer or K is a negative integer
+    # check K: K isn't an integer or K is a negative integer (K needs to be greater then 1!)
     is_valid = given_input[1].isnumeric()
     if is_valid:
-        is_valid = int(given_input[1]) < 0
+        is_valid = (int(given_input[1]) > 1)
     # check enum: one of the 5 given options
     if is_valid:
-        is_valid = given_input[2] in [curr_goal.name for curr_goal in goal]
+        is_valid = given_input[2] in [curr_goal.name for curr_goal in Goal]
 
     if not is_valid:
         print("Invalid Input!")
         sys.exit()
+    return (int)(given_input[1]), Goal(given_input[2])
 
 
 ''' ========================= spk from ex 2 ========================='''
@@ -130,7 +123,8 @@ def calc(x, y):  # used to calculate norm
     return np.sum(np.multiply(z, z))
 
 
-def call_fit_ex2(N, K, dimension, data_points, centroids, goal):  # calling fit function from kmeans.c
+# calling fit function from kmeans.c
+def call_fit_ex2(N, K, dimension, data_points, centroids, goal):
     # Get arguments for fit function
     centroids = np.array(centroids)
     centroids_indices = centroids[:, 0]
@@ -139,26 +133,22 @@ def call_fit_ex2(N, K, dimension, data_points, centroids, goal):  # calling fit 
 
     # N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
     try:
-        final_centroids = mykmeanssp.fit(
+        final_centroids = my_spkmeans.fit(
             N, K, dimension, data_points, goal, centroids_list)
         return (centroids_indices, final_centroids)
     except:
         print("An Error Has Occurred")
         sys.exit()
 
+
 ''' ========================= DONE spk from ex 2 ========================='''
 
-def main(argv):
-    '''=========================Checking input========================='''
-    argLen = len(argv)
-    check_input(argv, argLen)
 
-    '''=========================Set arguments========================='''
-    K = (int)(argv[1])
-    goal = argv[2]  # todo enum!
-    data_points_array = get_goal_input(argv[3], goal)
-    N = data_points_array.shape[0]
-    D = data_points_array.shape[1]
+def main(argv):
+    '''=========================Check input and Set arguments========================='''
+    argLen = len(argv)
+    K, goal = check_input(argv, argLen)
+    data_points_array, N, D = get_goal_input(argv[3])
 
     if K > N:
         print("Invalid Input!")
@@ -166,15 +156,15 @@ def main(argv):
 
     '''=========================run goal========================='''
     try:
-        goal_matrix = mykmeanssp.fit(N, K, D, data_points_array.tolist(), goal)
-        if(goal != "spk"):
+        goal_matrix = my_spkmeans.fit(N, K, D, data_points_array.tolist(), goal, [])
+        if(goal != Goal.spk):
             print_output(goal_matrix, N, goal)
         else:
             if(K == 0):
                 K = len(goal_matrix[0])
+            goal=Goal.spk_ex2
             centroids = kMeans_init(K, goal_matrix)
-            print_output_spk(
-                call_fit_ex2(N, K, data_points_array, centroids, K), K, K)
+            print_output_spk(call_fit_ex2(N, K, data_points_array, centroids, K), K, K)
 
     except:
         print("An Error Has Occurred")
