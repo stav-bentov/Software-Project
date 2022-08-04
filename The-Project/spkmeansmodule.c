@@ -8,6 +8,7 @@ static PyObject* fit(PyObject *self,PyObject *args){
     PyObject *current_double;
     PyObject *returned_result;
     PyObject *current_vector;
+    PyObject *current_centroid;
 
     /* (Goal= wam, ddg, lnorm, jacobi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
     /* (Goal= spk(2)):args= N, K, D, Datapoints/matrix, goal, Centroids*/
@@ -34,6 +35,9 @@ static PyObject* fit(PyObject *self,PyObject *args){
         for(j = 0; j < D; j++){
             current_double=PyList_GetItem(current_datapoint,j);
             Datapoints[i][j]=PyFloat_AsDouble(current_double);
+            if (i < K  && goal == SPK_EX2){
+                Centroids[i][j] = PyFloat_AsDouble(current_double);
+            }
         }
     }
     
@@ -84,6 +88,7 @@ static PyMethodDef Methods[]={
         {NULL,NULL,0,NULL}
 };
 
+/*todo - check name of moudle*/
 static struct PyModuleDef moudledef={
         PyModuleDef_HEAD_INIT,
         "mykmeanssp",
