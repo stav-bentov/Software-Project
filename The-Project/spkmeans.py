@@ -34,28 +34,28 @@ def print_output(returnFromFit, N, goal):
 def get_goal_input(filename):
     try:
         data = pd.read_csv(filename, header=None)
-        return data.to_numpy(), data.shape[0], data.shape[1]
+        return (data.to_numpy(), data.shape[0], data.shape[1])
     except:
         print("An Error Has Occurred")
         sys.exit()
 
 # spk's output is like in ex2- K indexs and centroids
-def print_output_spk(returnFromFit, dimension, K):
+def print_output_spk(returnFromFit, K, D, centroids_index):
     output_res = ""
     # Printing first row - indices of K randomly chosen centroids (initial centroids)
     for i in range(K):
         # returnFromFit[0] = randomly chosen centroids indices
-        output_res += str(int(returnFromFit[0][i]))
+        output_res += str(int(centroids_index[i]))
         if (i != K-1):
             output_res += ","
     output_res += "\n"
 
     # Printing the K calculated final centroids
     for i in range(K):
-        for j in range(dimension):
+        for j in range(D):
             # returnFromFit[1] = centroid got from kmenassp.c
-            output_res += str('%.4f' % (returnFromFit[1][i][j]))
-            if (j != dimension-1):
+            output_res += str('%.4f' % (returnFromFit[i][j]))
+            if (j != D-1):
                 output_res += ","
         output_res += "\n"
     print(output_res)
@@ -68,7 +68,7 @@ def check_input(given_input, argLen):
     # check K: K isn't an integer or K is a negative integer (K needs to be greater then 1!)
     is_valid = given_input[1].isnumeric()
     if is_valid:
-        is_valid = (int(given_input[1]) > 1)
+        is_valid = (int(given_input[1]) > 1 or int(given_input[1]) == 0)
     # check enum: one of the 5 given options
     if is_valid:
         is_valid = given_input[2] in [curr_goal.name for curr_goal in Goal]
@@ -76,13 +76,15 @@ def check_input(given_input, argLen):
     if not is_valid:
         print("Invalid Input!")
         sys.exit()
-    return (int)(given_input[1]), Goal(given_input[2])
+
+    return ((int)(given_input[1]), Goal[given_input[2]])
 
 
 ''' ========================= spk from ex 2 ========================='''
 def kMeans_init(K, data_points_array):
 
     Centroids_array = []  # Saves the centroids u1, ... , uK
+    Centroids__index_array = []
 
     N = len(data_points_array)
     '''if (K > N):
@@ -94,8 +96,12 @@ def kMeans_init(K, data_points_array):
     Pr_array = np.array([0.0 for i in range(N)])
     Index_array = np.array([i for i in range(N)])
     np.random.seed(0)
-    Centroids_array.append(
-        data_points_array[np.random.choice(Index_array)])  # miu 1
+
+    #added diffrently from ex2
+    index=np.random.choice(Index_array)
+    Centroids__index_array.append(index)
+
+    Centroids_array.append(data_points_array[index])  # miu 1
 
     for i in range(1, K):  # next k-1 centroids
         find_D(D_array, data_points_array, N,
@@ -104,8 +110,9 @@ def kMeans_init(K, data_points_array):
         Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         # choosing randomly an index of a datapoint to be centroid
         index = np.random.choice(Index_array, p=Pr_array)
+        Centroids__index_array.append(index)
         Centroids_array.append(data_points_array[index])
-    return Centroids_array
+    return Centroids__index_array,Centroids_array
 
 
 def find_D(D_array, datapoints_array, N, Centroids_array):
@@ -125,17 +132,10 @@ def calc(x, y):  # used to calculate norm
 
 # calling fit function from kmeans.c
 def call_fit_ex2(N, K, dimension, data_points, centroids, goal):
-    # Get arguments for fit function
-    centroids = np.array(centroids)
-    centroids_indices = centroids[:, 0]
-    centroids = centroids[:, 1:]
-    centroids_list = centroids.tolist()
-
     # N, K, max_iter, Datapoints_array, Centroids_array, epsilon, dimension
     try:
-        final_centroids = my_spkmeans.fit(
-            N, K, dimension, data_points, goal, centroids_list)
-        return (centroids_indices, final_centroids)
+        final_centroids = my_spkmeans.fit(N, K, dimension, data_points, goal.value, centroids)
+        return final_centroids
     except:
         print("An Error Has Occurred")
         sys.exit()
@@ -156,15 +156,17 @@ def main(argv):
 
     '''=========================run goal========================='''
     try:
-        goal_matrix = my_spkmeans.fit(N, K, D, data_points_array.tolist(), goal, [])
+        goal_matrix = my_spkmeans.fit(N, K, D, data_points_array.tolist(), goal.value, [])
         if(goal != Goal.spk):
             print_output(goal_matrix, N, goal)
         else:
             if(K == 0):
                 K = len(goal_matrix[0])
             goal=Goal.spk_ex2
-            centroids = kMeans_init(K, goal_matrix)
-            print_output_spk(call_fit_ex2(N, K, data_points_array, centroids, K), K, K)
+            centroids_index, centroids = kMeans_init(K, goal_matrix)
+            D=K
+            #goal_matrix= N*K, dimension=D=K
+            print_output_spk(call_fit_ex2(N, K, D,goal_matrix, centroids, goal), K, D, centroids_index)
 
     except:
         print("An Error Has Occurred")

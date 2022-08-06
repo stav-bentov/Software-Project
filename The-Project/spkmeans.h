@@ -81,8 +81,8 @@ void transpose(double **mat, int N);
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
 
 /* Kmeans algorithm's functions from ex2*/
-/*static int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
+int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K);
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
-void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);*/
+void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K);
 #endif

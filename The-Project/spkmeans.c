@@ -6,8 +6,11 @@
 double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
     double **jacobi_output, **U, **eigenvectors, **T;
+
     jacobi_output = jacobi_algo(N, lnorm);
-    print_result(jacobi_output,N,N,jacobi_g);
+    if(jacobi_output==NULL)
+        return NULL;
+
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
@@ -32,7 +35,6 @@ double **spk_algo(double **lnorm, int N, int *K)
         free_memory(jacobi_output, N + 1);
         return NULL;
     }
-    print_result(T,N,*K,spk_g);
     return T;
 }
 
@@ -271,16 +273,11 @@ double **I_matrix(int N)
 
 double **jacobi_algo(int N, double **A)
 { /* TODO: check if can erase NULL*/
-    /* SChange: erased NULL..*/
     int counter = 0;
     int iPointer, jPointer;
     double cPointer, sPointer;                   /*pivot element, s,c*/
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
-
-    printf("in jacobi:\n");
-    printf("print input:\n");
-    print_result(A,N,N,lnorm_g);
 
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
@@ -362,9 +359,6 @@ double **jacobi_algo(int N, double **A)
         /*free_memory1(N, 3, A1, V, curr_P);*/
         free(eigenvalues);
     }
-
-    printf("print output:\n");
-    print_result(jacobi_result,N,N,jacobi_g);
 
     return jacobi_result;
 }
@@ -687,9 +681,6 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     wam_matrix = data_output;
 
-    printf("Done WAM\n");
-    print_result(wam_matrix,N,N,wam_g);
-
     /* run DDG*/
     data_output = diagonal_matrix(wam_matrix, N);
     if (data_output == NULL)
@@ -702,9 +693,6 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     ddg_matrix = data_output;
 
-    printf("Done DDG\n");
-    print_result(ddg_matrix,N,N,ddg_g);
-
     /* run LNORM*/
     data_output = laplacian_matrix(ddg_matrix, wam_matrix, N);
     if (data_output == NULL)
@@ -716,11 +704,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
     if (goal == LNORM)
         return data_output;
 
-    /* SChange*/
     lnorm_matrix = data_output;
-
-    printf("Done LNORM\n");
-    print_result(lnorm_matrix,N,N,lnorm_g);
 
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);

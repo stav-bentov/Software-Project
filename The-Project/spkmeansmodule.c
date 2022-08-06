@@ -44,8 +44,8 @@ static PyObject *fit(PyObject *self, PyObject *args)
     {
         current_centroid = NULL;
         current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
-        if (i < K)
-            current_centroid = PyList_GetItem(Datapoints_PyObject, i);
+        if (i < K && goal == SPK_EX2)
+            current_centroid = PyList_GetItem(Centroids_PyObject, i);
         /*Set up each of Datapoints vectors*/
         for (j = 0; j < D; j++)
         {
@@ -99,6 +99,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     }
     free_memory(Datapoints, N);
     free_memory(goal_result, rows);
+    
     return returned_result;
 }
 
@@ -110,16 +111,15 @@ static PyMethodDef Methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-/*todo - check name of moudle*/
 static struct PyModuleDef moudledef = {
     PyModuleDef_HEAD_INIT,
-    "mykmeanssp",
+    "my_spkmeans",
     NULL,
     -1,
     Methods
 };
 
-PyMODINIT_FUNC PyInit_mykmeanssp(void)
+PyMODINIT_FUNC PyInit_my_spkmeans(void)
 {
     PyObject *m;
     m = PyModule_Create(&moudledef);

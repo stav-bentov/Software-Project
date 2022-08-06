@@ -9,7 +9,6 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
     int i, j, counter;
     double **oldCentroids;
     int cluster;
-
     counter = 0;
 
     oldCentroids = malloc((sizeof(double *)) * K);
