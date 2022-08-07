@@ -68,7 +68,7 @@ def check_input(given_input, argLen):
     # check K: K isn't an integer or K is a negative integer (K needs to be greater then 1!)
     is_valid = given_input[1].isnumeric()
     if is_valid:
-        is_valid = (int(given_input[1]) > 1 or int(given_input[1]) == 0)
+        is_valid = int(given_input[1]) >= 0 
     # check enum: one of the 5 given options
     if is_valid:
         is_valid = given_input[2] in [curr_goal.name for curr_goal in Goal]

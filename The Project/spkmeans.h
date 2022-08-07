@@ -1,8 +1,0 @@
-//
-// Created by Zohar Mosseri on 06/07/2022.
-//
-
-#ifndef SOFTWARE_PROJECT_SPKMEANS_H
-#define SOFTWARE_PROJECT_SPKMEANS_H
-
-#endif //SOFTWARE_PROJECT_SPKMEANS_H

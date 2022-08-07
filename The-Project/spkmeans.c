@@ -8,25 +8,22 @@ double **spk_algo(double **lnorm, int N, int *K)
     double **jacobi_output, **U, **eigenvectors, **T;
 
     jacobi_output = jacobi_algo(N, lnorm);
-    if(jacobi_output==NULL)
+    if (jacobi_output == NULL)
         return NULL;
 
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
-    sort_matrix_values(jacobi_output, 0, N - 1);
+    sort_matrix_values(jacobi_output, N);
+
 
     if (*K == 0)
-    { /* The Eigengap Heuristic*/
+    { /* The Eigengap Heuristic- was told not to handle a case where k=1*/
         eigengap_heuristic(jacobi_output[0], N, K);
-        if (*K <= 1)
-        {
-            free_memory(jacobi_output, N + 1);
-            return NULL;
-        }
     }
 
     transpose(eigenvectors, N);
+    
     /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
     U = eigenvectors;
     T = set_T(U, N, *K);
@@ -39,37 +36,27 @@ double **spk_algo(double **lnorm, int N, int *K)
 }
 
 /* sort matrix from index l(=0) to index r (=N-1)*/
-void sort_matrix_values(double **mat, int l, int r)
+void sort_matrix_values(double **mat, int N)
 {
-    int p;
-    if (l < r)
+    int i, j, i_max_swap;
+    double max_value;
+    for (i = 0; i < N; i++)
     {
-        p = sort_by_p(mat, l, r);
-        sort_matrix_values(mat, l, p - 1);
-        sort_matrix_values(mat, p + 1, r);
-    }
-}
-
-/* r= most right index, mat[0][r] will be set at the end at pivot_place where all values that are smaller allocated to it's left, others to it's right*/
-int sort_by_p(double **mat, int l, int r)
-{
-    int left_pivot, i;
-    left_pivot = l - 1;
-    for (i = l; i < r; i++)
-    {
-        if (mat[0][i] <= mat[0][r])
+        i_max_swap = -1;
+        max_value = mat[0][i];
+        for (j = i + 1; j < N; j++)
         {
-            left_pivot++;
-            swap(mat, left_pivot, i);
+            if (max_value < mat[0][j])
+            {
+                i_max_swap = j;
+                max_value = mat[0][j];
+            }
         }
+        if (i_max_swap != -1)
+            swap(mat, i_max_swap, i);
     }
-
-    left_pivot++;
-    swap(mat, left_pivot, r);
-    return left_pivot;
 }
 
-/* TODO: complete function*/
 /* swap between mat[0][index_1] to mat[0][index_2]*/
 void swap(double **mat, int index_1, int index_2)
 {
@@ -114,14 +101,13 @@ double **set_T(double **U, int N, int K)
 void eigengap_heuristic(double *eigenvalues, int N, int *K)
 { /* lnorm formed as a decreasing ordered eigenvalues*/
     int i;
-    /* TODO: what to do if the number of points is 1?*/
-    double curr_gap = DBL_MIN;
-    /* lmda(1)= E[N-1]>=lmda(2)=E[N-2]>=...>=lmda(n/2)=E[N-(N/2)]>=0*/
+    double curr_max_gap = DBL_MIN;
+    /* lmda(1)= E[0]>=lmda(2)=E[1]>=...>=lmda(n/2)=E[(N/2)-1]>=0*/
     for (i = 1; i <= (int)(N / 2); i++)
     {
-        if (curr_gap < fabs(eigenvalues[N - i] - eigenvalues[N - i - 1]))
+        if (curr_max_gap < fabs(eigenvalues[i - 1] - eigenvalues[i]))
         {
-            curr_gap = fabs(eigenvalues[i] - eigenvalues[i - 1]);
+            curr_max_gap = fabs(eigenvalues[i - 1] - eigenvalues[i]);
             *K = i;
         }
     }
@@ -461,10 +447,12 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     int q, l;
     double maxElem = -DBL_MAX; /*todo change - be careful*/
 
-
-    for (q = 0; q < N; ++q){
-        for (l = q+1; l < N; ++l){
-            if (fabs(A[q][l]) > maxElem){
+    for (q = 0; q < N; ++q)
+    {
+        for (l = q + 1; l < N; ++l)
+        {
+            if (fabs(A[q][l]) > maxElem)
+            {
                 maxElem = fabs(A[q][l]);
                 /*changes i,j pointers*/
                 *iPointer = q;
@@ -725,7 +713,7 @@ int main(int argc, char *argv[])
     double **data_input, **data_output;
     FILE *ifp;
     enum Goal goal = 0;
-    K=0;
+    K = 3;
 
     /* invalid number of arguments*/
     msg_and_exit(INVALID_TYPE, argc != 3);
@@ -764,7 +752,16 @@ int main(int argc, char *argv[])
         free_memory(data_input, N);
         msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
     }
-    print_result(data_output, N, N, goal);
+    /*TODO- delete at the end, it's for us!*/
+
+    if(goal==spk_g)
+        print_result(data_output, N, K, goal);
+    else
+        print_result(data_output, N, N, goal);
+
+    /*todo remove comment!*/
+    /*print_result(data_output, N, N, goal);*/
+
 
     fclose(ifp);
     exit(0);
