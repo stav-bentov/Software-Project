@@ -640,7 +640,7 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
         }
     }
 }
-/*todo delete*/
+/*todo delete
 void printRow(double * ArrayToFree){
     int leni,i;
     leni = sizeof(ArrayToFree);
@@ -648,20 +648,19 @@ void printRow(double * ArrayToFree){
         printf("%lf,\n",ArrayToFree[i]);
 
     }
-}
+}*/
 /* Gets an array to be free (pointers of pointers) and their size*/
 void free_memory(double **ArrayToFree, int num_rows)
 {
     int i;
     for (i = 0; i < num_rows; i++)
     {
-        /*todo delete*/
+        /*todo delete
         if (i == 0)
-            printRow(ArrayToFree[i]);
-        printf("ArrayToFree : i = %d , %p\n", i, ArrayToFree[i]);
+            printRow(ArrayToFree[i]);*/
+        /*printf("ArrayToFree : i = %d , %p\n", i, ArrayToFree[i]);*/
         free(ArrayToFree[i]);
     }
-    printf("ArrayToFree = end , %p\n", ArrayToFree);
     free(ArrayToFree);
 }
 
