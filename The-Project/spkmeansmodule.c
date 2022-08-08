@@ -102,6 +102,8 @@ static PyObject *fit(PyObject *self, PyObject *args)
 
     /*todo delete of this print*/
     printf("before %d\n", goal);
+    if (goal == SPK_EX2)
+        print_result(Datapoints, N,N,6);
     free_memory(Datapoints, N);
     printf("after %d\n", goal);
     /*todo delete of this print*/
