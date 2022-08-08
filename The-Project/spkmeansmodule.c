@@ -101,10 +101,9 @@ static PyObject *fit(PyObject *self, PyObject *args)
     }
 
     /*todo delete of this print*/
-    if (Datapoints == NULL)
-        printf("Datapoints is problematic\n");
-    else
-        free_memory(Datapoints, N);
+    printf("before %d\n", goal);
+    free_memory(Datapoints, N);
+    printf("after %d\n", goal);
     /*todo delete of this print*/
     printf("Datapoints is not !! problematic\n");
     /*free_memory(goal_result, rows);*/
