@@ -8,25 +8,36 @@ double **spk_algo(double **lnorm, int N, int *K)
     double **jacobi_output, **U, **eigenvectors, **T;
 
     jacobi_output = jacobi_algo(N, lnorm);
-    if (jacobi_output == NULL)
+    if (jacobi_output == NULL){
+        /*todo delete of this print*/
+        printf("till jacobi is okay\n");
         return NULL;
+    }
+
 
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
     sort_matrix_values(jacobi_output, N);
 
+    /*todo delete of this print*/
+    printf("till sort jacobi is okay\n");
 
     if (*K == 0)
     { /* The Eigengap Heuristic- was told not to handle a case where k=1*/
         eigengap_heuristic(jacobi_output[0], N, K);
     }
 
+    /*todo delete of this print*/
+    printf("till huerisitic K is okay\n");
+
     transpose(eigenvectors, N);
     
     /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
     U = eigenvectors;
     T = set_T(U, N, *K);
+    /*todo delete of this print*/
+    printf("till SET T is okay\n");
     if (T == NULL)
     {
         /*todo delete of this print*/
