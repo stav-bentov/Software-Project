@@ -642,9 +642,9 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
 }
 /*todo delete*/
 void printRow(double * ArrayToFree){
-    int leni;
+    int leni,i;
     leni = sizeof(ArrayToFree);
-    for (int i = 0; i < leni; ++i) {
+    for (i = 0; i < leni; ++i) {
         printf("%lf,\n",ArrayToFree[i]);
 
     }
