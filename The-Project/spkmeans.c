@@ -466,6 +466,11 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
     double signTheta = 1;
+    if (A[i][j] == 0){
+        *cPointer = 1;
+        *sPointer = 0;
+        return;
+    }
     theta = (A[j][j] - A[i][i]) / (2 * A[i][j]);
 
     if (theta < 0)
