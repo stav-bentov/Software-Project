@@ -107,7 +107,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         free_memory(Datapoints, N);
     /*todo delete of this print*/
     printf("Datapoints is not !! problematic\n");
-    free_memory(goal_result, rows);
+    /*free_memory(goal_result, rows);*/
     
     return returned_result;
 }
