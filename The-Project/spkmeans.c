@@ -740,6 +740,8 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);
+    /*todo delete of this print*/
+    printf("returend from spk_algo\n");
     if (data_output == NULL)
     { /* an error occurred- need to free*/
         /*todo delete of this print*/
