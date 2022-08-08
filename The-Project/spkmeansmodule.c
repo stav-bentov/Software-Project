@@ -26,7 +26,6 @@ static PyObject *fit(PyObject *self, PyObject *args)
         return NULL;
     }
     /* Set up Datapoints and Centroids's matrix*/
-    /*todo delete of +1*/
     Datapoints = matrix_allocation(N, D+1);
     if (Datapoints == NULL)
     {
@@ -77,8 +76,6 @@ static PyObject *fit(PyObject *self, PyObject *args)
         goal_result = run_goal(goal, Datapoints, N, D, &K);
         if (goal_result == NULL) /*todo check if that's how Stav wants it to be*/
         {
-            /*todo delete of this print*/
-            printf("goal_result == NULLo\n");
             free_memory(Datapoints, N);
             PyErr_SetString(PyExc_RuntimeError, ERROR);
             return NULL;
@@ -101,12 +98,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         PyList_SetItem(returned_result, i, Py_BuildValue("O", current_vector));
     }
 
-    /*todo delete of this print*/
-    if (goal == SPK_EX2)
-        print_result(Datapoints, K,D,6);
     free_memory(Datapoints, N);
-    printf("after %d\n", goal);
-    /*todo delete of this print*/
     free_memory(goal_result, rows);
     
     return returned_result;
