@@ -14,7 +14,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     /* (Goal= wam, ddg, lnorm, jacobi, spk(1)): args= N, K, D, Datapoints/matrix, goal */
     /* (Goal= spk(2)): args= N, K, D, Datapoints/matrix, goal, Centroids*/
     /* args= N, K, D, Datapoints/matrix, goal, Centroids*/
-    int N, K, D, i, j, rows, cols, return_value;
+    int N, K, D, i, j, rows, cols, cols_allocation, return_value;
     double **Datapoints, **Centroids;
     enum Goal goal;
     double **goal_result;
@@ -25,14 +25,20 @@ static PyObject *fit(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
+
+    if(goal==SPK_EX2)
+        cols_allocation=D+1;
+    else
+        cols_allocation=D;
+
     /* Set up Datapoints and Centroids's matrix*/
-    Datapoints = matrix_allocation(N, D+1);
+    Datapoints = matrix_allocation(N, cols_allocation);
     if (Datapoints == NULL)
     {
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
-    Centroids = matrix_allocation(K, D);
+    Centroids = matrix_allocation(K, cols_allocation);
     if (Centroids == NULL)
     {
         free_memory(Datapoints, N);
@@ -56,6 +62,13 @@ static PyObject *fit(PyObject *self, PyObject *args)
                 current_double = PyList_GetItem(current_centroid, j);
                 Centroids[i][j] = PyFloat_AsDouble(current_double);
             }
+        }
+
+        /* Zero in last cell [dimension]*/
+        Datapoints[i][j] = 0;
+        if (i < K)
+        {
+            Centroids[i][j] = 0;
         }
     }
 
@@ -97,27 +110,26 @@ static PyObject *fit(PyObject *self, PyObject *args)
         }
         PyList_SetItem(returned_result, i, Py_BuildValue("O", current_vector));
     }
-
     free_memory(Datapoints, N);
     free_memory(goal_result, rows);
-    
+
     return returned_result;
 }
 
 static PyMethodDef Methods[] = {
-    {"fit",
-     (PyCFunction)fit,
-     METH_VARARGS,
-     NULL},
-    {NULL, NULL, 0, NULL}
+        {"fit",
+                (PyCFunction)fit,
+                     METH_VARARGS,
+                        NULL},
+        {NULL, NULL, 0, NULL}
 };
 
 static struct PyModuleDef moudledef = {
-    PyModuleDef_HEAD_INIT,
-    "my_spkmeans",
-    NULL,
-    -1,
-    Methods
+        PyModuleDef_HEAD_INIT,
+        "my_spkmeans",
+        NULL,
+        -1,
+        Methods
 };
 
 PyMODINIT_FUNC PyInit_my_spkmeans(void)
