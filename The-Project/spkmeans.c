@@ -659,9 +659,13 @@ void free_memory(double **ArrayToFree, int num_rows)
         printRow(ArrayToFree[i]);*/
         if (ArrayToFree[i] == NULL)
             printf("ArrayToFree : i = %d , %p", i, ArrayToFree[i]);
-        free(ArrayToFree[i]);
+        else
+            free(ArrayToFree[i]);
     }
-    free(ArrayToFree);
+    if (ArrayToFree[i] == NULL)
+        printf("ArrayToFree = end , %p", ArrayToFree);
+    else
+        free(ArrayToFree);
 }
 
 void msg_and_exit(int error_type, int is_error)
