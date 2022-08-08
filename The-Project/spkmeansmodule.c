@@ -99,10 +99,17 @@ static PyObject *fit(PyObject *self, PyObject *args)
         }
         PyList_SetItem(returned_result, i, Py_BuildValue("O", current_vector));
     }
+
     /*todo delete of this print*/
-    printf("the end is problematic\n");
-    free_memory(Datapoints, N);
-    free_memory(goal_result, rows);
+    if (Datapoints == NULL)
+        printf("Datapoints is problematic\n");
+    else
+        free_memory(Datapoints, N);
+    /*todo delete of this print*/
+    if (goal_result == NULL)
+        printf("goal_resultis problematic\n");
+    else
+        free_memory(goal_result, rows);
     
     return returned_result;
 }
