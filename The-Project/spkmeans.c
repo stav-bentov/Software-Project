@@ -332,7 +332,7 @@ double **jacobi_algo(int N, double **A)
         counter++;
         /*A = A1*/
         if (counter != 1)
-            matrix_copy(N, A, A1);
+            matrix_copy(N, N, A, A1);
 
         find_Aij(N, A, &iPointer, &jPointer);
         find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);
@@ -420,13 +420,13 @@ void transpose(double **mat, int N)
     }
 }
 
-void matrix_copy(int N, double **dest_mat, double **src_mat)
+void matrix_copy(int rows, int columns, double **dest_mat, double **src_mat)
 {
     int i, j;
 
-    for (i = 0; i < N; i++)
+    for (i = 0; i < rows; i++)
     {
-        for (j = 0; j < N; j++)
+        for (j = 0; j < columns; j++)
         {
             dest_mat[i][j] = src_mat[i][j];
         }
@@ -458,7 +458,7 @@ void matrix_multiplication(int N, double **src1, double **src2, double **dst)
         }
     }
 
-    matrix_copy(N, dst, temp);
+    matrix_copy(N, N, dst, temp);
     free_memory(temp, N);
 }
 
@@ -556,7 +556,7 @@ double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors)
 
     for (i = 0; i < N; ++i)
         res[0][i] = eigenValues[i];
-    matrix_copy(N, &res[1], eigenVectors);
+    matrix_copy(N, N, &res[1], eigenVectors);
 
     return res;
 }
