@@ -302,7 +302,7 @@ double **jacobi_algo(int N, double **A)
         counter++;
         /*A = A1*/
         if (counter != 1)
-            matrix_copy(N, N, A1);
+            matrix_copy(N, N, A, A1);
 
         find_Aij(N, A, &iPointer, &jPointer);
         find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);
