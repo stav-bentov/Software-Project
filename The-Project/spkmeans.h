@@ -15,7 +15,6 @@
 #define FAIL -1
 #define FIND_N 1
 #define FIND_D 2
-#define BUFFER_SIZE 1024
 #define INVALID_TYPE 0
 #define ERROR_TYPE 1
 #define EPSILON_JACOBI 0.00001
@@ -28,8 +27,6 @@
 #define JACOBI 4
 #define SPK 5
 #define SPK_EX2 6
-#define INVALID_TYPE 0
-#define ERROR_TYPE 1
 
 enum Goal
 {
@@ -69,7 +66,7 @@ void free_memory(double **ArrayToFree, int num_rows);
 
 /* Jacobi's functions*/
 double **jacobi_algo(int N, double **A);
-void matrix_copy(int rows, int columns, double **dest_mat, double **src_mat);
+void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat);
 int check_convergence(int N, double **A, double **A1);
 void find_Aij(int N, double **A, int *iPointer, int *jPointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);

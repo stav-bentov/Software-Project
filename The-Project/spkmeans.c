@@ -8,10 +8,8 @@ double **spk_algo(double **lnorm, int N, int *K)
     double **jacobi_output, **U, **eigenvectors, **T;
 
     jacobi_output = jacobi_algo(N, lnorm);
-    if (jacobi_output == NULL){
+    if (jacobi_output == NULL)
         return NULL;
-    }
-
 
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
@@ -24,13 +22,11 @@ double **spk_algo(double **lnorm, int N, int *K)
         eigengap_heuristic(jacobi_output[0], N, K);
     }
 
-
     transpose(eigenvectors, N);
-    
+
     /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
     U = eigenvectors;
     T = set_T(U, N, *K);
-
     if (T == NULL)
     {
         free_memory(jacobi_output, N + 1);
@@ -269,9 +265,6 @@ double **jacobi_algo(int N, double **A)
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
 
-
-
-
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
     { /* an error occurred- no need to free*/
@@ -293,7 +286,6 @@ double **jacobi_algo(int N, double **A)
         return NULL;
     }
 
-
     eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
     if (eigenvalues == NULL)
     {
@@ -301,7 +293,6 @@ double **jacobi_algo(int N, double **A)
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
-        /*free(eigenvalues);*/
         /*free_memory1(N, 3, A1, V, curr_P);*/
         return NULL;
     }
@@ -311,7 +302,7 @@ double **jacobi_algo(int N, double **A)
         counter++;
         /*A = A1*/
         if (counter != 1)
-            matrix_copy(N, N, A, A1);
+            matrix_copy(N, N, A1);
 
         find_Aij(N, A, &iPointer, &jPointer);
         find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);
@@ -391,44 +382,16 @@ void transpose(double **mat, int N)
     }
 }
 
-void matrix_copy(int rows, int columns, double **dest_mat, double **src_mat)
+void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat)
 {
     int i, j;
-
-    for (i = 0; i < rows; i++)
+    for (i = 0; i < num_rows; i++)
     {
-        for (j = 0; j < columns; j++)
+        for (j = 0; j < num_cols; j++)
         {
             dest_mat[i][j] = src_mat[i][j];
         }
     }
-}
-
-void matrix_multiplication(int N, double **src1, double **src2, double **dst)
-{
-    double **temp;
-    int i, j, k;
-
-    temp = matrix_allocation(N, N);
-    if (temp == NULL)
-    {
-        free_memory(dst, N);
-        dst = NULL;
-        return;
-    }
-
-    for (i = 0; i < N; i++)
-    { /* temp = src1*src2 */
-        for (j = 0; j < N; j++)
-        {
-            temp[i][j] = 0;
-            for (k = 0; k < N; k++)
-                temp[i][j] += src1[i][k] * src2[k][j];
-        }
-    }
-
-    matrix_copy(N, N, dst, temp);
-    free_memory(temp, N);
 }
 
 int check_convergence(int N, double **A, double **A1)
@@ -616,7 +579,6 @@ void free_memory(double **ArrayToFree, int num_rows)
     int i;
     for (i = 0; i < num_rows; i++)
     {
-        /*printf("ArrayToFree : i = %d , %p\n", i, ArrayToFree[i]);*/
         free(ArrayToFree[i]);
     }
     free(ArrayToFree);
@@ -710,7 +672,6 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);
-
     if (data_output == NULL)
     { /* an error occurred- need to free*/
         free_memory(wam_matrix, N);
@@ -728,7 +689,7 @@ int main(int argc, char *argv[])
     double **data_input, **data_output;
     FILE *ifp;
     enum Goal goal = 0;
-    K = 3;
+    K = 0;
 
     /* invalid number of arguments*/
     msg_and_exit(INVALID_TYPE, argc != 3);
@@ -768,7 +729,6 @@ int main(int argc, char *argv[])
         msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
     }
     /*TODO- delete at the end, it's for us!*/
-
     if(goal==spk_g)
         print_result(data_output, N, K, goal);
     else
@@ -776,7 +736,6 @@ int main(int argc, char *argv[])
 
     /*todo remove comment!*/
     /*print_result(data_output, N, N, goal);*/
-
 
     fclose(ifp);
     exit(0);
