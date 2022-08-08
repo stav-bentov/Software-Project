@@ -26,7 +26,8 @@ static PyObject *fit(PyObject *self, PyObject *args)
         return NULL;
     }
     /* Set up Datapoints and Centroids's matrix*/
-    Datapoints = matrix_allocation(N, D);
+    /*todo delete of +1*/
+    Datapoints = matrix_allocation(N, D+1);
     if (Datapoints == NULL)
     {
         PyErr_SetString(PyExc_RuntimeError, ERROR);
