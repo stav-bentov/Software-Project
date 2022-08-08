@@ -45,6 +45,8 @@ double **spk_algo(double **lnorm, int N, int *K)
         free_memory(jacobi_output, N + 1);
         return NULL;
     }
+    /*todo delete of this print*/
+    printf("till SET T2 is okay\n");
     return T;
 }
 
