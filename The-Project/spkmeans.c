@@ -282,6 +282,9 @@ double **jacobi_algo(int N, double **A)
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
 
+
+
+
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
     { /* an error occurred- no need to free*/
@@ -299,13 +302,14 @@ double **jacobi_algo(int N, double **A)
 
     curr_P = matrix_allocation(N, N);
     if (curr_P == NULL)
+    { /* an error occurred- need to free memory*/
         /*todo delete of this print*/
         printf("curr_P is NULL\n");
-    { /* an error occurred- need to free memory*/
         free_memory(A1, N);
         free_memory(V, N);
         return NULL;
     }
+
 
     eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
     if (eigenvalues == NULL)
