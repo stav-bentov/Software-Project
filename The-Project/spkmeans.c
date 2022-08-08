@@ -185,7 +185,7 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
     if (mul2 == NULL)
     {
         /*todo delete of this print*/
-        printf("mul2 is NULL");
+        printf("mul2 is NULL\n");
         free_memory(mul1, N);
         return NULL;
     }
@@ -193,7 +193,7 @@ double **laplacian_matrix(double **diag_mat, double **adj_mat, int N)
     if (lnorm == NULL)
     {
         /*todo delete of this print*/
-        printf("LNORM is NULL");
+        printf("LNORM is NULL\n");
         free_memory(mul1, N);
         free_memory(mul2, N);
         return NULL;
@@ -281,7 +281,7 @@ double **jacobi_algo(int N, double **A)
     if (V == NULL)
     {
         /*todo delete of this print*/
-        printf("V is NULL");
+        printf("V is NULL\n");
         free_memory(A1, N);
         return NULL;
     }
@@ -289,7 +289,7 @@ double **jacobi_algo(int N, double **A)
     curr_P = matrix_allocation(N, N);
     if (curr_P == NULL)
         /*todo delete of this print*/
-        printf("curr_P is NULL");
+        printf("curr_P is NULL\n");
     { /* an error occurred- need to free memory*/
         free_memory(A1, N);
         free_memory(V, N);
@@ -300,7 +300,7 @@ double **jacobi_algo(int N, double **A)
     if (eigenvalues == NULL)
     {
         /*todo delete of this print*/
-        printf("eigenvalues is NULL");
+        printf("eigenvalues is NULL\n");
         /*todo decide which free memory to use 1 or regular*/
         free_memory(A1, N);
         free_memory(V, N);
@@ -325,7 +325,7 @@ double **jacobi_algo(int N, double **A)
         if (A1 == NULL)
         {
             /*todo delete of this print*/
-            printf("A1 is NULL");
+            printf("A1 is NULL\n");
             free(eigenvalues);
             free_memory(V, N);
         }
@@ -333,7 +333,7 @@ double **jacobi_algo(int N, double **A)
         if (A1 == NULL)
         {
             /*todo delete of this print*/
-            printf("A1 is NULL");
+            printf("A1 is NULL\n");
             free(eigenvalues);
             free_memory(V, N);
         }
@@ -344,7 +344,7 @@ double **jacobi_algo(int N, double **A)
         if (V == NULL)
         { /* it is reachable!*/
             /*todo delete of this print*/
-            printf("V here is NULL");
+            printf("V here is NULL\n");
             free(eigenvalues);
             free_memory(A1, N);
             free_memory(curr_P, N);
@@ -358,7 +358,7 @@ double **jacobi_algo(int N, double **A)
     if (jacobi_result == NULL)
     {
         /*todo delete of this print*/
-        printf("jacobi_result is NULL");
+        printf("jacobi_result is NULL\n");
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
@@ -425,7 +425,7 @@ void matrix_multiplication(int N, double **src1, double **src2, double **dst)
     if (temp == NULL)
     {
         /*todo delete of this print*/
-        printf("temp is NULL");
+        printf("temp is NULL\n");
         free_memory(dst, N);
         dst = NULL;
         return;
@@ -713,7 +713,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
     if (data_output == NULL)
     { /* an error occurred- need to free*/
         /*todo delete of this print*/
-        printf("data_output is NULL");
+        printf("data_output is NULL\n");
         free_memory(wam_matrix, N);
         free_memory(ddg_matrix, N);
         return NULL;
@@ -728,7 +728,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
     if (data_output == NULL)
     { /* an error occurred- need to free*/
         /*todo delete of this print*/
-        printf("data_output 2 is NULL");
+        printf("data_output 2 is NULL\n");
         free_memory(wam_matrix, N);
         free_memory(ddg_matrix, N);
         free_memory(lnorm_matrix, N);
@@ -781,7 +781,7 @@ int main(int argc, char *argv[])
     if (data_output == NULL)
     { /* an error has occurred*/
         /*todo delete of this print*/
-        printf("data_output 33 is NULL");
+        printf("data_output 33 is NULL\n");
         free_memory(data_input, N);
         msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
     }
