@@ -656,7 +656,7 @@ void free_memory(double **ArrayToFree, int num_rows)
     for (i = 0; i < num_rows; i++)
     {
         /*todo delete*/
-        if (i == 1)
+        if (i == 0)
             printRow(ArrayToFree[i]);
         printf("ArrayToFree : i = %d , %p\n", i, ArrayToFree[i]);
         free(ArrayToFree[i]);
