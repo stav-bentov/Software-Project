@@ -753,6 +753,8 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
         free_memory(lnorm_matrix, N);
         return NULL;
     }
+    /*todo delete of this print*/
+    printf("going to return data_output from spk algo\n");
     return data_output;
 }
 
