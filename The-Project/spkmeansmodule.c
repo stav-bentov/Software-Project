@@ -26,6 +26,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    /* only in spk_ex2- when we return to fit in the second time, Datapoints need to have D+1 cols*/
     if(goal==SPK_EX2)
         cols_allocation=D+1;
     else
@@ -38,21 +39,28 @@ static PyObject *fit(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }
-    Centroids = matrix_allocation(K, cols_allocation);
-    if (Centroids == NULL)
+    current_centroid=NULL;
+    Centroids=NULL;
+    /* Set Centroids only in case spk_ex2!*/
+    if(goal == SPK_EX2)
     {
-        free_memory(Datapoints, N);
-        PyErr_SetString(PyExc_RuntimeError, ERROR);
-        return NULL;
+        Centroids = matrix_allocation(K, cols_allocation);
+        if (Centroids == NULL)
+        {
+            free_memory(Datapoints, N);
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
     }
-
+    
+    /* Fill matrix value as given matrix*/
     for (i = 0; i < N; i++)
     {
-        current_centroid = NULL;
         current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
         if (i < K && goal == SPK_EX2)
             current_centroid = PyList_GetItem(Centroids_PyObject, i);
-        /*Set up each of Datapoints vectors*/
+
+        /*Set up each of vector*/
         for (j = 0; j < D; j++)
         {
             current_double = PyList_GetItem(current_datapoint, j);
@@ -64,11 +72,14 @@ static PyObject *fit(PyObject *self, PyObject *args)
             }
         }
 
-        /* Zero in last cell [dimension]*/
-        Datapoints[i][j] = 0;
-        if (i < K && goal == SPK_EX2)
+        /* Only in spk_ex2- Zero in last cell [dimension]*/
+        if(goal == SPK_EX2)
         {
-            Centroids[i][j] = 0;
+            Datapoints[i][j] = 0;
+            if (i < K)
+            {
+                Centroids[i][j] = 0;
+            }
         }
     }
 
@@ -76,7 +87,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     {
         return_value = kMeans(N, K, Datapoints, Centroids, D);
         if (return_value == FAIL)
-        {
+        { /*todo: add free_mem*/
             PyErr_SetString(PyExc_RuntimeError, ERROR);
             return NULL;
         }
