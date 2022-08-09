@@ -66,7 +66,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
 
         /* Zero in last cell [dimension]*/
         Datapoints[i][j] = 0;
-        if (i < K)
+        if (i < K && goal == SPK_EX2)
         {
             Centroids[i][j] = 0;
         }
