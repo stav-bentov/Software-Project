@@ -75,7 +75,7 @@ void swap(double **mat, int index_1, int index_2)
 double **set_T(double **U, int N, int K)
 {
     int i, j, q;
-    double sum;
+    double sum=0;
     double **T = matrix_allocation(N, K);
     if (T == NULL)
         return NULL;
@@ -91,8 +91,10 @@ double **set_T(double **U, int N, int K)
                     sum += pow(U[i][q], 2);
                 }
             }
-
-            T[i][j] = U[i][j] / sqrt(sum);
+            if(sum != 0)
+                T[i][j] = U[i][j] / sqrt(sum);
+            else
+                T[i][j] = 0;
         }
     }
     return T;
