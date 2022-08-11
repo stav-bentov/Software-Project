@@ -81,46 +81,40 @@ def check_input(given_input, argLen):
 
 
 ''' ========================= spk from ex 2 ========================='''
-def kMeans_init(K, data_points_array):
+def kMeans_init(K, data_points_list):
+
+    np.random.seed(0)
 
     Centroids_array = []  # Saves the centroids u1, ... , uK
-    Centroids__index_array = []
+    Centroids_index_array = []
 
+    data_points_array=np.array(data_points_list)
     N = len(data_points_array)
-    '''if (K > N):
-        print("Invalid Input!")
-        sys.exit()'''  # todo- needed?
-
-    D_array = np.array([0.0 for i in range(N+1)])
-    # Pr_array[i] = probability of
-    Pr_array = np.array([0.0 for i in range(N)])
+    D_array = np.array([0.0 for i in range(N+1)])# Dl=min (xl-miuj)^2 for 1<=j<i and D[N]=sum(D)
+    Pr_array = np.array([0.0 for i in range(N)])# Pr_array[i] = probability of choosing x
     Index_array = np.array([i for i in range(N)])
-    np.random.seed(0)
 
     #added diffrently from ex2
     index=np.random.choice(Index_array)
-    Centroids__index_array.append(index)
-
-    Centroids_array.append(data_points_array[index])  # miu 1
+    Centroids_index_array.append(index)
+    Centroids_array.append(data_points_array[index].tolist())  # miu 1
 
     for i in range(1, K):  # next k-1 centroids
-        find_D(D_array, data_points_array, N,
-               Centroids_array)  # calculating D_l
+        find_D(D_array, data_points_array, N, Centroids_array)  # calculating D_l
         # Pr_array[i] = D_l / sum(d_l for each 1<=l<=N)
         Pr_array = np.array([(D_array[l] / D_array[N]) for l in range(N)])
         # choosing randomly an index of a datapoint to be centroid
         index = np.random.choice(Index_array, p=Pr_array)
-        Centroids__index_array.append(index)
-        Centroids_array.append(data_points_array[index])
-    return Centroids__index_array,Centroids_array
+        Centroids_index_array.append(index)
+        Centroids_array.append(data_points_array[index].tolist())
+    return Centroids_index_array,Centroids_array
 
 
 def find_D(D_array, datapoints_array, N, Centroids_array):
     D_array[N] = 0.0
     for l in range(N):
         # D_array[l] = min(x_l - miu_j)^2 for j s.t. 1<=j<=number of chosen centroids
-        D_array[l] = np.min([calc(datapoints_array[l][1:], centroid[1:])
-                            for centroid in Centroids_array])
+        D_array[l] = np.min([calc(datapoints_array[l], np.array(centroid)) for centroid in Centroids_array])
         # last cell in D_array is the sum of all D's
         D_array[N] = D_array[N] + D_array[l]
 

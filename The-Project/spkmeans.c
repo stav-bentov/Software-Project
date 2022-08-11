@@ -94,7 +94,7 @@ double **set_T(double **U, int N, int K)
             if(sum != 0)
                 T[i][j] = U[i][j] / sqrt(sum);
             else
-                T[i][j] = 0;
+                T[i][j]= 0;
         }
     }
     return T;
