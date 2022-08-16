@@ -557,8 +557,8 @@ int find_N_D(FILE *ifp, int find_who)
         }
         else
         {
-            /* D- calculated by number of comas (+ 1) in first row- after 
-             * done reading first row- returns calculated D */
+            /* D- calculated by number of comas (+ 1) in first row.
+             * After done reading first row- returns calculated D */
             if (c == '\n')
             {
                 rewind(ifp);
@@ -575,9 +575,10 @@ int find_N_D(FILE *ifp, int find_who)
 
     rewind(ifp);
 
-    /*TODO check this!*/
+    /*TODO delete this!
     if (find_who == FIND_D)
-        count++;
+        count++;*/
+        
     return count;
 }
 
