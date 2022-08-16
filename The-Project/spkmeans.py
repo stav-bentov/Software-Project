@@ -129,7 +129,7 @@ def find_D(D_array, datapoints_array, N, Centroids_array):
 # Recieves vectors x,y 
 # Returns |x-y|
 def calc(x, y):  
-    z = np.subtract(x, y)
+    z = np.subtract(np.array(x), np.array(y))
     return np.sum(np.multiply(z, z))
 
 # Recieves N, K, dimension, data_points, centroids, goal
