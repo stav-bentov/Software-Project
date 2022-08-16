@@ -1,5 +1,7 @@
 #include "spkmeans.h"
 
+/* Receives N- number of points, K- number of centroids, Datapoints,  Centroids- initial centroids (chosen be kmeans++) and the datapoint's dimension
+ * Returns the final centroids (from K-means algorithm)*/
 int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
 {
     /*
@@ -30,7 +32,7 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
     }
 
     /* Calculate k-means:
-    stop iteration when number of iteration is more then man_iter
+    Stop iteration when number of iteration is more then man_iter
     or when all of the centroids have changed less then epsilon*/
     while (MAX_ITER_KMEANS > counter)
     {
@@ -89,7 +91,8 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
     return SUCCESS;
 }
 
-/* Gets the new and old centroids, return 1 if all of the centroids didn't change more then epsilon,else-0*/
+/* Receives the new and old centroids
+ * Returns 1 if all of the centroids didn't change more then epsilon,else-0*/
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K)
 {
     int i;
@@ -107,7 +110,8 @@ int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimen
     return 1;
 }
 
-/* Gets the centroids and one datapoint and return datapoint's cluster*/
+/* Receives the centroids and one datapoint
+ * Returns datapoint's cluster*/
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K)
 {
     int i, j, cluster;
@@ -123,7 +127,7 @@ int find_cluster(double **Centroids, double *Datapoint, int dimension, int K)
         {
             sum += pow((Datapoint[j] - Centroids[i][j]), 2);
         }
-        if (minSum >= sum)
+        if (minSum > sum)
         {
             minSum = sum;
 
@@ -135,7 +139,7 @@ int find_cluster(double **Centroids, double *Datapoint, int dimension, int K)
     return cluster;
 }
 
-/* Gets the updated centroids and old ones- update the old centroids*/
+/* Receives the updated centroids and old ones- update the old centroids*/
 void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K)
 {
     int i, j;
