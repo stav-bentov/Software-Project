@@ -379,12 +379,12 @@ double **jacobi_algo(int N, double **A)
     counter=0;
 
     /* Memory allocations- if matrix_allocation returns NULL-
-     * an error occurred- free previous allocations and return NULL */
+     * an error occurred - free previous allocations and return NULL */
     A1 = matrix_allocation(N, N);
     if (A1 == NULL)
         return NULL;
 
-    V = I_matrix(N);
+    V = I_matrix(N); /* in the first iteration, V = curr_P1*/
     if (V == NULL)
     {
         free_memory(A1, N);
@@ -410,31 +410,32 @@ double **jacobi_algo(int N, double **A)
         return NULL;
     }
 
+    /* Will run up to 100 iterations if it doesn't reach convergence before + in the first iteration, convergence is not relevant*/
     while ((MAX_ITER_JACOBI > counter) && (!check_convergence(N, A, A1) || (counter == 0)))
     {
         counter++;
         /*A = A1*/
-        if (counter != 1)
+        if (counter != 1) /*in the first iteration, A1 does not have the right values at this point*/
             matrix_copy(N, N, A, A1);
 
-        find_Aij(N, A, &iPointer, &jPointer);
-        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);
-        calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);
+        find_Aij(N, A, &iPointer, &jPointer); /*finding the index of Aij - the pivot*/
+        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);/*calculating c,s with the given formulas*/
+        calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);/*calculating P matrix with the given formula*/
 
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0);
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /*A1 = P_transpose X A */
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1);
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /*A1 *= P -> (equals P_transpose X A X P) */
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
 
-        V = calc_mul(N, V, curr_P);
+        V = calc_mul(N, V, curr_P); /* V *= curr_P */
         if (V == NULL)
         { /* it is reachable!*/
             free(eigenvalues);
@@ -446,7 +447,7 @@ double **jacobi_algo(int N, double **A)
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*Getting eigenvalues from A' diagonal!*/
-    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V);
+    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /*Putting eigenVectors and eigenVectors together*/
     if (jacobi_result == NULL)
     {
         free_memory(A1, N);
@@ -459,6 +460,8 @@ double **jacobi_algo(int N, double **A)
     return jacobi_result;
 }
 
+/* turn 0 : A1 = P_transpose X A */
+/* turn 1 : A1 = A1 X P -> (equals P_transpose X A X P) */
 double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn)
 {
     double **A1_pointer;
@@ -466,7 +469,8 @@ double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P
 
     mat1 = (turn == 0) ? curr_P : A1;
     mat2 = (turn == 0) ? A : curr_P;
-
+    /* turn 0 :curr_P will be P here, then transpose(curr_P) == P_transpose */
+    /* turn 1 :curr_P will be Ptranspose here but transpose(Ptranspose) == P*/
     transpose(curr_P, N);
     A1_pointer = A1;
     A1 = calc_mul(N, mat1, mat2);
@@ -478,7 +482,7 @@ double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P
 }
 
 /* Receives matrix mat and N- number of rows/columns
- * Updates mat to be transpose(mat) */
+ * Updates mat to be transposed */
 void transpose(double **mat, int N)
 {
     int i, j;
@@ -495,9 +499,9 @@ void transpose(double **mat, int N)
     }
 }
 
+/* (true) iff off(A)^2 - off(A')^2 <= epsilon */
 int check_convergence(int N, double **A, double **A1)
 {
-    /* (true) iff off(A)^2 - off(A')^2 <= epsilon */
     int i, j;
     double off_A_squared = 0, off_A1_squared = 0;
 
@@ -505,8 +509,10 @@ int check_convergence(int N, double **A, double **A1)
     {
         for (j = 0; j < N; j++)
         {
-            off_A_squared += i == j ? 0 : pow(A[i][j], 2);
-            off_A1_squared += i == j ? 0 : pow(A1[i][j], 2);
+            /*Sum square of all off-diagonal elements in the Matrix*/
+            /*TODO check if parentheses arent necessary here + zchange from pow(A[i][j], 2) to A[i][j]*A[i][j]*/
+            off_A_squared += i == j ? 0 : A[i][j]*A[i][j];
+            off_A1_squared += i == j ? 0 : A1[i][j]*A1[i][j];
         }
     }
     if (off_A_squared - off_A1_squared <= EPSILON_JACOBI)
@@ -523,7 +529,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     {
         for (l = q + 1; l < N; ++l)
         {
-            if (fabs(A[q][l]) > maxElem)
+            if (fabs(A[q][l]) > maxElem) /*found a bigger value of what it found so far*/
             {
                 maxElem = fabs(A[q][l]);
                 /*changes i,j pointers*/
@@ -534,6 +540,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     }
 }
 
+/*calculating c,s,t from the given formulas*/
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
@@ -561,7 +568,7 @@ void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
         for (l = 0; l < N; ++l)
         {
             if (k == l)
-                curr_P[k][l] = (k == i || l == j) ? c : 1;
+                curr_P[k][l] = (k == i || l == j) ? c : 1; /* 1 on the diagonal*/
             else if (k == j && l == i)
                 curr_P[k][l] = -s;
             else
@@ -570,6 +577,7 @@ void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
     }
 }
 
+/*getting elements from A1 diagonal*/
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1)
 {
     int i;
