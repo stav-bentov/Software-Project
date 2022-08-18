@@ -5,21 +5,25 @@
  * Returns after 3-5 steps from "The Normalized Spectral Clustering Algorithm" a matrix T as N datapoints and calculate K if needed (case K=0)*/
 double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
-    double **jacobi_output, **U, **eigenvectors, **T;
+    double **jacobi_output, **U, **eigenvectors, **T, **sort_transpose;
 
-    jacobi_output = jacobi_algo(N, lnorm);
+    jacobi_output = (double **)jacobi_algo(N, lnorm);
     if (jacobi_output == NULL)
         return NULL;
 
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
-    sort_matrix_values(jacobi_output, N);
+    /*sort_matrix_values(jacobi_output, N);*/
+    sort_transpose= sort_matrix_values(jacobi_output,N);
+    if(sort_transpose == NULL)
+        return NULL;
 
     /* The Eigengap Heuristic- was told not to handle a case where k=1*/
     if (*K == 0)
-        eigengap_heuristic(jacobi_output[0], N, K);
+        eigengap_heuristic(sort_transpose[0], N, K);
 
+    eigenvectors = sort_transpose + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
 
     /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
@@ -32,9 +36,85 @@ double **spk_algo(double **lnorm, int N, int *K)
     }
     return T;
 }
+
+double** sort_matrix_values(double **mat, int N)
+{
+    int i, j, max_index;
+    double max_value;
+    double **sort_mat =matrix_allocation(N+1,N);
+    if(sort_mat == NULL)
+    {
+        free_memory(mat,N+1);
+        return NULL;
+    }
+    for (i = 0; i < N; i++)
+    {
+        max_index = -1;
+        max_value =-1;
+        for (j = 0; j < N; j++)
+        {
+            /* found new max*/
+            if (max_value < mat[0][j])
+            {
+                max_index = j;
+                max_value=mat[0][j];
+            }
+        }
+        sort_mat[0][i]=max_value;
+        sort_mat[i+1]=mat[max_index+1];
+        mat[0][max_index]=-1;
+    }
+    return sort_mat;
+}
+
 /* Receives a jacobi's matrix
  * Sort first row and rows 1 to N according to the eigenvalues in first row */
-void sort_matrix_values(double **mat, int N)
+/*void sort_matrix_values(double **mat, int N, int *return_value)
+{
+    int i, j, max_index,swap_index,temp_index;
+    double max_value,temp_value;
+    double *sort_values =calloc(N,sizeof(double));
+    if(sort_values == NULL)
+    {
+        *return_value=0;
+        return;
+    }
+    double *sort_vectors =malloc(N*sizeof(*double));
+    if(sort_vectors == NULL)
+    {
+        *return_value=0;
+        free(sort_values);
+        return;
+    }
+    for (i = 0; i < N; i++)
+    {
+        max_index = -1;
+        max_value = -1;
+        for (j = 0; j < N; j++)
+        {
+            if (max_value < mat[0][j])
+            {
+                max_index = j;
+                max_value=mat[0][j];
+            }
+        }
+        sort_values[i]=max_value;
+        sort_vectors[i]=mat[max_index];
+        mat[0][max_index]=-1;
+    }
+
+    for (i=1; i<N+1; i++)
+    {
+        mat[0][i-1]=sort_values[i-1];
+        mat[i]=sort_vectors[i-1];
+    }
+    free(sort_values);
+    free(sort_vectors);
+}*/
+
+/* Receives a jacobi's matrix
+ * Sort first row and rows 1 to N according to the eigenvalues in first row */
+/*void sort_matrix_values(double **mat, int N)
 {
     int i, j, i_max_swap;
     double max_value;
@@ -42,9 +122,6 @@ void sort_matrix_values(double **mat, int N)
     {
         i_max_swap = -1;
         max_value = mat[0][i];
-        /* Look from maximum value between i+1 to N 
-         * swap between i to i_max_swap (maximum value's index) 
-         * in first row and i+1 and i_max_swap+1 vactors*/
         for (j = i + 1; j < N; j++)
         {
             if (max_value < mat[0][j])
@@ -56,7 +133,7 @@ void sort_matrix_values(double **mat, int N)
         if (i_max_swap != -1)
             swap(mat, i_max_swap, i);
     }
-}
+}*/
 
 /* Receives jacobi's matrix, index_1 and index_2 between 0 to N-1
  * Swaps between mat[0][index_1] to mat[0][index_2] and mat[index_1+1] to mat[index_2+1]*/
@@ -99,7 +176,7 @@ double **set_T(double **U, int N, int K)
             if(sum != 0)
                 T[i][j] = U[i][j] / sqrt(sum);
             else
-                T[i][j]= 0;
+                return NULL;
         }
     }
     return T;

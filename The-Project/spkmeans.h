@@ -52,7 +52,7 @@ void calc_sub(int N, double **A, double **B);
 double **I_matrix(int N);
 double **spk_algo(double **lnorm, int N, int *K);
 void swap(double **mat, int index_1, int index_2);
-void sort_matrix_values(double **mat, int N);
+double **sort_matrix_values(double **mat, int N);
 void eigengap_heuristic(double *eigenvalues, int N, int *K);
 double **set_T(double **U, int N, int K);
 
