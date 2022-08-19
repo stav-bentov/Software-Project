@@ -25,11 +25,11 @@ def print_output(mat_from_fit, N, goal):
 
     for i in range(num_rows):
         for j in range(N):
-            # todo check with Stav about %
             output_res += str('%.4f' % (mat_from_fit[i][j]))
             if (j != N-1):
                 output_res += ","
-        output_res += "\n"
+        if (i != num_rows-1):
+            output_res += "\n"
     print(output_res)
 
 # Recieves file's name
@@ -59,7 +59,8 @@ def print_output_spk(mat_from_fit, K, D, centroids_index_list):
             output_res += str('%.4f' % (mat_from_fit[i][j]))
             if (j != D-1):
                 output_res += ","
-        output_res += "\n"
+        if ( i != K-1):
+            output_res += "\n"
     print(output_res)
 
 # Recieves user's input and number of values given
