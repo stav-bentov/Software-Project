@@ -37,6 +37,8 @@ double **spk_algo(double **lnorm, int N, int *K)
     return T;
 }
 
+/* Receives a jacobi's matrix
+ * Sort first row and rows 1 to N according to the eigenvalues in first row */
 double** sort_matrix_values(double **mat, int N)
 {
     int i, j, max_index;
@@ -64,90 +66,9 @@ double** sort_matrix_values(double **mat, int N)
         sort_mat[i+1]=mat[max_index+1];
         mat[0][max_index]=-1;
     }
+    free(mat[0]);
+    free(mat);
     return sort_mat;
-}
-
-/* Receives a jacobi's matrix
- * Sort first row and rows 1 to N according to the eigenvalues in first row */
-/*void sort_matrix_values(double **mat, int N, int *return_value)
-{
-    int i, j, max_index,swap_index,temp_index;
-    double max_value,temp_value;
-    double *sort_values =calloc(N,sizeof(double));
-    if(sort_values == NULL)
-    {
-        *return_value=0;
-        return;
-    }
-    double *sort_vectors =malloc(N*sizeof(*double));
-    if(sort_vectors == NULL)
-    {
-        *return_value=0;
-        free(sort_values);
-        return;
-    }
-    for (i = 0; i < N; i++)
-    {
-        max_index = -1;
-        max_value = -1;
-        for (j = 0; j < N; j++)
-        {
-            if (max_value < mat[0][j])
-            {
-                max_index = j;
-                max_value=mat[0][j];
-            }
-        }
-        sort_values[i]=max_value;
-        sort_vectors[i]=mat[max_index];
-        mat[0][max_index]=-1;
-    }
-
-    for (i=1; i<N+1; i++)
-    {
-        mat[0][i-1]=sort_values[i-1];
-        mat[i]=sort_vectors[i-1];
-    }
-    free(sort_values);
-    free(sort_vectors);
-}*/
-
-/* Receives a jacobi's matrix
- * Sort first row and rows 1 to N according to the eigenvalues in first row */
-/*void sort_matrix_values(double **mat, int N)
-{
-    int i, j, i_max_swap;
-    double max_value;
-    for (i = 0; i < N; i++)
-    {
-        i_max_swap = -1;
-        max_value = mat[0][i];
-        for (j = i + 1; j < N; j++)
-        {
-            if (max_value < mat[0][j])
-            {
-                i_max_swap = j;
-                max_value = mat[0][j];
-            }
-        }
-        if (i_max_swap != -1)
-            swap(mat, i_max_swap, i);
-    }
-}*/
-
-/* Receives jacobi's matrix, index_1 and index_2 between 0 to N-1
- * Swaps between mat[0][index_1] to mat[0][index_2] and mat[index_1+1] to mat[index_2+1]*/
-void swap(double **mat, int index_1, int index_2)
-{
-    double temp_value, *temp_vector;
-
-    temp_value = mat[0][index_1];
-    mat[0][index_1] = mat[0][index_2];
-    mat[0][index_2] = temp_value;
-
-    temp_vector = mat[index_1 + 1];
-    mat[index_1 + 1] = mat[index_2 + 1];
-    mat[index_2 + 1] = temp_vector;
 }
 
 /* Receives U (created by largest eigenvectors of jacobi), N- number of rows, K- number of columns
@@ -176,7 +97,9 @@ double **set_T(double **U, int N, int K)
             if(sum != 0)
                 T[i][j] = U[i][j] / sqrt(sum);
             else
-                return NULL;
+                T[i][j]=0;
+            /* TODO: check if needs to be 0 or errro!*/
+            /*    return NULL;*/
         }
     }
     return T;
