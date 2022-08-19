@@ -14,7 +14,8 @@ double **spk_algo(double **lnorm, int N, int *K)
     /* Transpose on eigenvectors- to make the sort easier*/
     eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
-    /*sort_matrix_values(jacobi_output, N);*/
+
+    /*after sort, jacobi_output is being freed, no use it again!*/
     sort_transpose= sort_matrix_values(jacobi_output,N);
     if(sort_transpose == NULL)
         return NULL;
@@ -30,8 +31,8 @@ double **spk_algo(double **lnorm, int N, int *K)
     U = eigenvectors;
     T = set_T(U, N, *K);
     if (T == NULL)
-    {
-        free_memory(jacobi_output, N + 1);
+    { /* error occured in setting T*/
+        free_memory(sort_transpose, N + 1);
         return NULL;
     }
     return T;
@@ -39,7 +40,7 @@ double **spk_algo(double **lnorm, int N, int *K)
 
 /* Receives a jacobi's matrix
  * Sort first row and rows 1 to N according to the eigenvalues in first row */
-double** sort_matrix_values(double **mat, int N)
+double **sort_matrix_values(double **mat, int N)
 {
     int i, j, max_index;
     double max_value;
