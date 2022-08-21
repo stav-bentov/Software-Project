@@ -394,7 +394,7 @@ double **jacobi_algo(int N, double **A)
 }
 
 /*void calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
-    /*todo check if i need to reset A1 every time i get here, or just do this local changes*/
+    //todo check if i need to reset A1 every time i get here, or just do this local changes/
     int r;
 
     for (r = 0; r < N; r++) {
