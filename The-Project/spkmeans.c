@@ -354,13 +354,13 @@ double **jacobi_algo(int N, double **A)
         find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);/*calculating c,s with the given formulas*/
         calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);/*calculating P matrix with the given formula*/
 
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); //A1 = P_transpose X A
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /*A1 = P_transpose X A*/
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); //A1 *= P -> (equals P_transpose X A X P)
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /*A1 *= P -> (equals P_transpose X A X P)*/
         if (A1 == NULL)
         {
             free(eigenvalues);
@@ -394,7 +394,7 @@ double **jacobi_algo(int N, double **A)
 }
 
 /*void calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
-    //todo check if i need to reset A1 every time i get here, or just do this local changes/
+    /todo check if i need to reset A1 every time i get here, or just do this local changes/
     int r;
 
     for (r = 0; r < N; r++) {
