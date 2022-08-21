@@ -1,6 +1,7 @@
 #include "spkmeans.h"
 
 /* ================================== SPK algorithm steps 1-5 ==================================*/
+
 /* Receives N- number of rows, *K- pointer to K (number of clusters) and lnorm's matrix (created from wam,ddg->lnorm)
  * Returns after 3-5 steps from "The Normalized Spectral Clustering Algorithm" a matrix T as N datapoints and calculate K if needed (case K=0)*/
 double **spk_algo(double **lnorm, int N, int *K)
@@ -295,12 +296,20 @@ double **I_matrix(int N)
 /* ================================== JACOBI ================================== */
 double **jacobi_algo(int N, double **A)
 {
+
     int counter,iPointer, jPointer;
     double cPointer, sPointer;                   /*pivot element, s,c*/
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
     double *eigenvalues;
 
     counter=0;
+
+    if (N == 1)
+    {/*pivot does not even exist + todo check if its okay to do invalid message and exit here*/
+        printf(INVALID);
+        exit(1);
+    }
+
 
     /* Memory allocations- if matrix_allocation returns NULL-
      * an error occurred - free previous allocations and return NULL */
@@ -330,7 +339,6 @@ double **jacobi_algo(int N, double **A)
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
-        /*free_memory1(N, 3, A1, V, curr_P);*/
         return NULL;
     }
 
@@ -346,18 +354,20 @@ double **jacobi_algo(int N, double **A)
         find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);/*calculating c,s with the given formulas*/
         calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);/*calculating P matrix with the given formula*/
 
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /*A1 = P_transpose X A */
+        /*A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); //A1 = P_transpose X A
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /*A1 *= P -> (equals P_transpose X A X P) */
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); //A1 *= P -> (equals P_transpose X A X P)
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
-        }
+        }*/
+
+        calc_A1(N, A, A1, cPointer, sPointer, iPointer, jPointer);
 
         V = calc_mul(N, V, curr_P); /* V *= curr_P */
         if (V == NULL)
@@ -365,23 +375,40 @@ double **jacobi_algo(int N, double **A)
             free(eigenvalues);
             free_memory(A1, N);
             free_memory(curr_P, N);
-            /*free_memory1(N, 2, A1, curr_P);*/
             return NULL;
         }
     }
 
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*Getting eigenvalues from A' diagonal!*/
     jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /*Putting eigenVectors and eigenVectors together*/
+
     if (jacobi_result == NULL)
     {
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
-        /*free_memory1(N, 3, A1, V, curr_P);*/
         free(eigenvalues);
     }
 
     return jacobi_result;
+}
+
+void **calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
+    /*todo check if i need to reset A1 every time i get here, or just do this local changes*/
+    int r;
+
+    for (r = 0; r < N; r++) {
+        A1[r][i] = (r != i && r!= j) ? c*A[r][i] - s*A[r][j] : A[r][i];
+        A1[i][r] = (r != i && r != j) ? c*A[r][i] - s*A[r][j] : A[r][i];
+
+        A1[r][j] = (r != i && r != j) ? c*A[r][j] + s*A[r][i] : A[r][j];
+        A1[j][r] = (r != i && r != j) ? c*A[r][j] + s*A[r][i] : A[r][j];
+    }
+    A1[i][i] = c*c*A[i][i] + s*s*A[j][j] - 2*s*c*A[i][j];
+    A1[j][j] = s*s*A[i][i] + c*c*A[j][j] + 2*s*c*A[i][j];
+    A1[i][j] = 0;
+    A1[j][i] = 0;
+
 }
 
 /* turn 0 : A1 = P_transpose X A */
@@ -665,6 +692,8 @@ void msg_and_exit(int error_type, int is_error)
  * Prints the matrix (if the goal is jacobi then updates num_rows +1) */
 void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
 {
+
+
     int i, j;
 
     if (goal == JACOBI)
@@ -762,6 +791,7 @@ int main(int argc, char *argv[])
     enum Goal goal = 0;
     K = 0;
 
+
     /* invalid number of arguments*/
     msg_and_exit(INVALID_TYPE, argc != 3);
 
@@ -776,16 +806,17 @@ int main(int argc, char *argv[])
         goal = jacobi_g;
     msg_and_exit(INVALID_TYPE, goal == 0);
 
+
     file_name = argv[2];
     ifp = fopen(file_name, "r");
     msg_and_exit(ERROR_TYPE, ifp == NULL);
-
     N = find_N_D(ifp, FIND_N);
     D = find_N_D(ifp, FIND_D);
 
     /* Creates matrix for input*/
     data_input = matrix_allocation(N, D);
     msg_and_exit(ERROR_TYPE, data_input == NULL);
+
 
     /* Sets the N points/symmetric matrix in data_input*/
     set_input(ifp, data_input, N, D);

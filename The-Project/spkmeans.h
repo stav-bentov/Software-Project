@@ -71,6 +71,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
 double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn);
+void **calc_A1(int N, double **A, double **A1, double c, double s, int i, int j);
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
 void transpose(double **mat, int N);
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
