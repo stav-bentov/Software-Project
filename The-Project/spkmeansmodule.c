@@ -22,7 +22,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     /* (IF: Goal= spk(2)): args= N, K, D, Datapoints/matrix, goal, Centroids*/
     /* Receiving args from Python program*/
     if (!PyArg_ParseTuple(args, "iiiOiO", &N, &K, &D, &Datapoints_PyObject, &goal, &Centroids_PyObject))
-    { /*todo check if goal sent from python is a number*/
+    {
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
     }

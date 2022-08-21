@@ -6,7 +6,7 @@
  * Returns after 3-5 steps from "The Normalized Spectral Clustering Algorithm" a matrix T as N datapoints and calculate K if needed (case K=0)*/
 double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
-    double **jacobi_output, **U, **eigenvectors, **T, **sort_transpose;
+    double **jacobi_output, **eigenvectors, **T, **sort_transpose;
 
     jacobi_output = (double **)jacobi_algo(N, lnorm);
     if (jacobi_output == NULL)
@@ -25,21 +25,18 @@ double **spk_algo(double **lnorm, int N, int *K)
     if (*K == 0)
         eigengap_heuristic(sort_transpose[0], N, K);
 
-    if (*K == 1){/*todo check if there can be a case like that : myabe error instead of invalid*/
-        printf(INVALID);
-        exit(1);
-    }
     eigenvectors = sort_transpose + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
 
-    /* U points to the start of eigenvectors, we will use only the first K vectors (first K columns)*/
-    U = eigenvectors;
-    T = set_T(U, N, *K);
+    /* eigenvectors points to the start of eigenvectors, we will use only the first K vectors (first K columns) as U
+    and update eigenvectors (by renormalizing each of U’s rows) to be T */
+    T= set_T(eigenvectors, N, *K);
     if (T == NULL)
     { /* error occured in setting T*/
         free_memory(sort_transpose, N + 1);
         return NULL;
     }
+
     return T;
 }
 
@@ -61,7 +58,7 @@ double **sort_matrix_values(double **mat, int N)
         max_value =-1;
         for (j = 0; j < N; j++)
         {
-            /* found new max*/
+            /* Found new max*/
             if (max_value < mat[0][j])
             {
                 max_index = j;
@@ -92,18 +89,20 @@ double **set_T(double **U, int N, int K)
     {
         for (j = 0; j < K; j++)
         {
+            /* Calculate sum once for each new row!*/
             if (j == 0)
-            { /* Calculate sum once for each new row!*/
+            { 
                 sum = 0;
                 for (q = 0; q < K; q++)
                 {
                     sum += pow(U[i][q], 2);
                 }
             }
-            if(sum != 0)
+            T[i][j]= (sum != 0) ? (U[i][j] / sqrt(sum)) : 0;
+            /*if(sum != 0)
                 T[i][j] = U[i][j] / sqrt(sum);
             else
-                T[i][j]=0;
+                T[i][j]=0;*/
             /* TODO: check if needs to be 0 or errro!*/
             /*    return NULL;*/
         }
@@ -237,7 +236,7 @@ void cal_D12(double **diag_mat, int N)
     }
 }
 
-/* Receives matrixs: A,B and N- number of rows/columns
+/* Receives matrices: A,B and N- number of rows/columns
  * Returns matrix C= A*B
  * If an error occurred returns NULL*/
 double **calc_mul(int N, double **A, double **B)
@@ -262,7 +261,7 @@ double **calc_mul(int N, double **A, double **B)
     return C;
 }
 
-/* Receives matrixs: A,B and N- number of rows/columns
+/* Receives matrices: A,B and N- number of rows/columns
  * Updates A= A-B */
 void calc_sub(int N, double **A, double **B)
 {
@@ -298,9 +297,12 @@ double **I_matrix(int N)
 /* ================================== Done LNORM ==================================*/
 
 /* ================================== JACOBI ================================== */
+/* Receives symetric matrix A size N*N
+ * Returns matrix with first row= eigenvalues, next rows are the
+ * corresponding eigenvectors (each column is a vector)
+ * If an error occurred returns NULL*/
 double **jacobi_algo(int N, double **A)
 {
-
     int counter,iPointer, jPointer;
     double cPointer, sPointer;                   /*pivot element, s,c*/
     double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
@@ -308,13 +310,7 @@ double **jacobi_algo(int N, double **A)
 
     counter=0;
 
-    if (N == 1)
-    {/*pivot is not well defined in case that N==1
-    *  todo check if its okay to do invalid message and exit HERE*/
-        printf(INVALID"\n");
-        exit(1);
-    }
-
+    /* TODO: handle case N==1*/
 
     /* Memory allocations- if matrix_allocation returns NULL-
      * an error occurred - free previous allocations and return NULL */
@@ -351,31 +347,29 @@ double **jacobi_algo(int N, double **A)
     {
         counter++;
         /*A = A1*/
-        if (counter != 1) /*in the first iteration, A1 does not have the right values at this point*/
+        if (counter != 1) /*In the first iteration, A1 does not have the right values at this point*/
             matrix_copy(N, N, A, A1);
 
-        find_Aij(N, A, &iPointer, &jPointer); /*finding the index of Aij - the pivot*/
-        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);/*calculating c,s with the given formulas*/
-        calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);/*calculating P matrix with the given formula*/
+        find_Aij(N, A, &iPointer, &jPointer); /* Finding the index of Aij - the pivot*/
+        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);/* Calculating c,s with the given formulas*/
+        calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer);/* Calculating P matrix with the given formula*/
 
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /*A1 = P_transpose X A*/
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /* A1 = P_transpose*A*/
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /*A1 *= P -> (equals P_transpose X A X P)*/
+        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /* A1 *= P -> (equals P_transpose*A*P)*/
         if (A1 == NULL)
         {
             free(eigenvalues);
             free_memory(V, N);
         }
-
-        /*calc_A1(N, A, A1, cPointer, sPointer, iPointer, jPointer);*/
 
         V = calc_mul(N, V, curr_P); /* V *= curr_P */
         if (V == NULL)
-        { /* it is reachable!*/
+        { /* It is reachable!*/
             free(eigenvalues);
             free_memory(A1, N);
             free_memory(curr_P, N);
@@ -383,9 +377,8 @@ double **jacobi_algo(int N, double **A)
         }
     }
 
-
-    get_eigenvalues_from_A1(eigenvalues, N, A1); /*Getting eigenvalues from A' diagonal!*/
-    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /*Putting eigenVectors and eigenVectors together*/
+    get_eigenvalues_from_A1(eigenvalues, N, A1); /* Getting eigenvalues from A' diagonal!*/
+    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /* Putting eigenVectors and eigenVectors together*/
 
     if (jacobi_result == NULL)
     {
@@ -417,8 +410,10 @@ double **jacobi_algo(int N, double **A)
 
 }*/
 
-/* turn 0 : A1 = P_transpose X A */
-/* turn 1 : A1 = A1 X P -> (equals P_transpose X A X P) */
+/* Receives matrices A,A1,cuur_P, N- number of rows/columns and an int-turn:
+ * Returns: case turn=0 : A1 = P_transpose X A 
+ *          case turn=1 : A1 = A1 X P -> (equals P_transpose X A X P)
+ * If an error occurred returns NULL*/
 double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn)
 {
     double **A1_pointer;
@@ -426,12 +421,13 @@ double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P
 
     mat1 = (turn == 0) ? curr_P : A1;
     mat2 = (turn == 0) ? A : curr_P;
-    /* turn 0 :curr_P will be P here, then transpose(curr_P) == P_transpose */
-    /* turn 1 :curr_P will be Ptranspose here but transpose(Ptranspose) == P*/
+    /* case turn=0 :curr_P will be P here, then transpose(curr_P) == P_transpose */
+    /* case turn=1 :curr_P will be Ptranspose here but transpose(Ptranspose) == P*/
     transpose(curr_P, N);
     A1_pointer = A1;
     A1 = calc_mul(N, mat1, mat2);
     free_memory(A1_pointer, N);
+    /* An error occured*/
     if (A1 == NULL)
         free_memory(curr_P, N);
 
@@ -456,7 +452,8 @@ void transpose(double **mat, int N)
     }
 }
 
-/* (true) iff off(A)^2 - off(A')^2 <= epsilon */
+/* Receives matrices A,A1 and N- number of rows/columns
+ * Returns 1 (true) iff off(A)^2 - off(A')^2 <= epsilon */
 int check_convergence(int N, double **A, double **A1)
 {
     int i, j;
@@ -476,8 +473,10 @@ int check_convergence(int N, double **A, double **A1)
     return 0;
 }
 
+/* Receives matrix A, N- number of rows/columns and a pointer to the numbers that represent i,j
+ * Updates i and j to be the locations of the largest ABSOLUTE value (the pivot) */
 void find_Aij(int N, double **A, int *iPointer, int *jPointer)
-{ /* finds the off-diagonal element with the largest ABSOLUTE value*/
+{
     int q, l;
     double maxElem = -DBL_MAX; /*todo change - be careful*/
 
@@ -485,7 +484,7 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     {
         for (l = q + 1; l < N; ++l)
         {
-            if (fabs(A[q][l]) > maxElem) /*found a bigger value of what it found so far*/
+            if (fabs(A[q][l]) > maxElem)
             {
                 maxElem = fabs(A[q][l]);
                 /*changes i,j pointers*/
@@ -496,7 +495,8 @@ void find_Aij(int N, double **A, int *iPointer, int *jPointer)
     }
 }
 
-/*calculating c,s,t from the given formulas*/
+/* Receives matrix A, i,j- the location of the pivot
+ * Calculates c,s,t according to the given formulas */
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
@@ -515,6 +515,8 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
     *sPointer = t / sqrt(1 + t * t);
 }
 
+/* Receives matrix curr_P, N- number of rows/columns, i,j- the location of the pivot, and c,s
+ * Updates P according to the given instructions */
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
 {
     int k, l;
@@ -533,7 +535,8 @@ void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
     }
 }
 
-/*getting elements from A1 diagonal*/
+/* Receives matrix A1, N- number of rows/columns and a pointer to eigenvalues's array
+ * Updates eigenvalues according to the diagonal of A1 */
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1)
 {
     int i;
@@ -541,6 +544,8 @@ void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1)
         eigenvalues[i] = A1[i][i];
 }
 
+/* Receives matrix eigenVectors, N- number of rows/columns and an array of the eigenvalues
+ * Returns matrix with first row- eigenValues, next rows- eigenVectors */
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors)
 {
     double **res = NULL;
@@ -615,15 +620,11 @@ int find_N_D(FILE *ifp, int find_who)
     }
 
     rewind(ifp);
-
-    /*TODO delete this!
-    if (find_who == FIND_D)
-        count++;*/
         
     return count;
 }
 
-/* Receives matrixs dest_mat,src_mat and number of rows and columns
+/* Receives matrices dest_mat,src_mat and number of rows and columns
  * Updates dest_mat to be a copy of src_mat */
 void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat)
 {
@@ -697,8 +698,6 @@ void msg_and_exit(int error_type, int is_error)
  * Prints the matrix (if the goal is jacobi then updates num_rows +1) */
 void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
 {
-
-
     int i, j;
 
     if (goal == JACOBI)
@@ -772,7 +771,6 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
         return data_output;
 
     lnorm_matrix = data_output;
-
 
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);
