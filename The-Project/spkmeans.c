@@ -306,7 +306,7 @@ double **jacobi_algo(int N, double **A)
 
     if (N == 1)
     {/*pivot does not even exist + todo check if its okay to do invalid message and exit here*/
-        printf(INVALID);
+        printf(INVALID"\n");
         exit(1);
     }
 
@@ -393,7 +393,7 @@ double **jacobi_algo(int N, double **A)
     return jacobi_result;
 }
 
-void **calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
+void calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
     /*todo check if i need to reset A1 every time i get here, or just do this local changes*/
     int r;
 
