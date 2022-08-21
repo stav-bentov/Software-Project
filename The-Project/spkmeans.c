@@ -25,6 +25,10 @@ double **spk_algo(double **lnorm, int N, int *K)
     if (*K == 0)
         eigengap_heuristic(sort_transpose[0], N, K);
 
+    if (*K == 1){/*todo check if there can be a case like that : myabe error instead of invalid*/
+        printf(INVALID);
+        exit(1);
+    }
     eigenvectors = sort_transpose + 1; /* jacobi without eigenvalues*/
     transpose(eigenvectors, N);
 
@@ -305,7 +309,8 @@ double **jacobi_algo(int N, double **A)
     counter=0;
 
     if (N == 1)
-    {/*pivot does not even exist + todo check if its okay to do invalid message and exit here*/
+    {/*pivot is not well defined in case that N==1
+    *  todo check if its okay to do invalid message and exit HERE*/
         printf(INVALID"\n");
         exit(1);
     }
@@ -335,7 +340,6 @@ double **jacobi_algo(int N, double **A)
     eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
     if (eigenvalues == NULL)
     {
-        /*TODO decide which free memory to use 1 or regular*/
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
@@ -379,6 +383,7 @@ double **jacobi_algo(int N, double **A)
         }
     }
 
+
     get_eigenvalues_from_A1(eigenvalues, N, A1); /*Getting eigenvalues from A' diagonal!*/
     jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /*Putting eigenVectors and eigenVectors together*/
 
@@ -393,8 +398,9 @@ double **jacobi_algo(int N, double **A)
     return jacobi_result;
 }
 
+
 /*void calc_A1(int N, double **A, double **A1, double c, double s, int i, int j) {
-    /todo check if i need to reset A1 every time i get here, or just do this local changes/
+    /todo delete + check if i need to reset A1 every time i get here, or just do this local changes/
     int r;
 
     for (r = 0; r < N; r++) {
@@ -461,7 +467,6 @@ int check_convergence(int N, double **A, double **A1)
         for (j = 0; j < N; j++)
         {
             /*Sum square of all off-diagonal elements in the Matrix*/
-            /*TODO check if parentheses arent necessary here + zchange from pow(A[i][j], 2) to A[i][j]*A[i][j]*/
             off_A_squared += i == j ? 0 : A[i][j]*A[i][j];
             off_A1_squared += i == j ? 0 : A1[i][j]*A1[i][j];
         }
@@ -767,6 +772,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
         return data_output;
 
     lnorm_matrix = data_output;
+
 
     /* run SPK*/
     data_output = spk_algo(lnorm_matrix, N, K);

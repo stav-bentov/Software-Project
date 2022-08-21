@@ -151,3 +151,4 @@ void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimensi
         }
     }
 }
+
