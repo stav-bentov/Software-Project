@@ -934,7 +934,7 @@ int main(int argc, char *argv[])
     if(goal==jacobi_g)
         free_memory(data_input, N+1);
     else
-        free_memory(data_input, N+1);
+        free_memory(data_input, N);
 
     fclose(ifp);
     exit(0);
