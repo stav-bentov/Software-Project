@@ -95,7 +95,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
             PyErr_SetString(PyExc_RuntimeError, ERROR);
             return NULL;
         }
-        goal_result = Centroids;
+        goal_result = Centroids; /*todo check maybe the problem comes from here*/
         rows = K; /*rows=number of clusters/centroids=K*/
         cols=D; /*cols= dimension*/
     }

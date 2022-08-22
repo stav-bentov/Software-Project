@@ -509,13 +509,19 @@ double **jacobi_algo(int N, double **A)
     get_eigenvalues_from_A1(eigenvalues, N, A1); /* Getting eigenvalues from A' diagonal!*/
     jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /* Putting eigenVectors and eigenVectors together*/
 
-    if (jacobi_result == NULL)
+    /*todo check in nova too
+     * if (jacobi_result == NULL)
     {
         free_memory(A1, N);
         free_memory(V, N);
         free_memory(curr_P, N);
         free(eigenvalues);
-    }
+    }*/
+    free_memory(A1, N);
+    free_memory(V, N);
+    free_memory(curr_P, N);
+    free(eigenvalues);
+
 
     return jacobi_result;
 }
@@ -612,7 +618,7 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 {
     double theta, t;
     double signTheta = 1;
-    if (A[i][j] == 0){
+    if (A[i][j] == 0){ /*TODO wait for the forum, probs should stop while loop (pivot is 0 -> A is an identity matrix)*/
         *cPointer = 1;
         *sPointer = 0;
         return;
@@ -629,7 +635,7 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 /* Receives matrix curr_P, N- number of rows/columns, i,j- the location of the pivot, and c,s
  * Updates P according to the given instructions */
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
-{
+{/* todo it better (just 1 loop because you go on the diagonal*/
     int k, l;
 
     for (k = 0; k < N; ++k)
