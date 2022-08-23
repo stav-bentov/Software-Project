@@ -8,7 +8,7 @@ double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
     double **jacobi_output, **eigenvectors, **T, **sort_transpose;
 
-    jacobi_output = (double **)jacobi_algo(N, lnorm);
+    jacobi_output = (double **)jacobi_algo2(N, lnorm);
     if (jacobi_output == NULL)
         return NULL;
 
