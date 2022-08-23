@@ -67,7 +67,7 @@ void free_memory(double **ArrayToFree, int num_rows);
 double **jacobi_algo(int N, double **A);
 void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat);
 int check_convergence(int N, double **A, double **A1);
-void find_Aij(int N, double **A, int *iPointer, int *jPointer);
+void find_Aij(int N, double **A, int *i_pointer, int *j_pointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
 double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn);
