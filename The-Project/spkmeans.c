@@ -889,7 +889,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     if (goal == JACOBI)
     {
-        data_output = jacobi_algo(N, data_input);
+        data_output = jacobi_algo2(N, data_input);
         return data_output;
     }
 
