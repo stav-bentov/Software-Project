@@ -66,19 +66,14 @@ void free_memory(double **ArrayToFree, int num_rows);
 /* Jacobi's functions*/
 double **jacobi_algo(int N, double **A);
 void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat);
-int check_convergence(int N, double **A, double **A1);
 void find_Aij(int N, double **A, int *i_pointer, int *j_pointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
-double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn);
 void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
 void transpose(double **mat, int N);
 double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
-
-/*Stav jacobi */
 void calc_A1(int N, double **A, double c, double s, int i, int j, int *return_value);
 double calc_off_diag(int N, double **A);
-double **jacobi_algo2(int N, double **A);
 
 /* Kmeans algorithm's functions from ex2*/
 int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension);

@@ -8,15 +8,15 @@ double **spk_algo(double **lnorm, int N, int *K)
 { /* Called after steps 1-2 have been made*/
     double **jacobi_output, **eigenvectors, **T, **sort_transpose;
 
-    jacobi_output = (double **)jacobi_algo2(N, lnorm);
+    jacobi_output = (double **)jacobi_algo(N, lnorm);
     if (jacobi_output == NULL)
         return NULL;
 
     /* Transpose on eigenvectors- to make the sort easier*/
-    eigenvectors = jacobi_output + 1; /* jacobi without eigenvalues*/
+    eigenvectors = jacobi_output + 1; /* Jacobi without eigenvalues*/
     transpose(eigenvectors, N);
 
-    /* After sort, jacobi_output is being freed, ther is no use in it again!*/
+    /* in sort_transpose jacobi_output is being freed, there is no use in it again!*/
     sort_transpose = sort_matrix_values(jacobi_output, N);
     if (sort_transpose == NULL)
         return NULL;
@@ -25,21 +25,14 @@ double **spk_algo(double **lnorm, int N, int *K)
     if (*K == 0)
         eigengap_heuristic(sort_transpose[0], N, K);
 
-    eigenvectors = sort_transpose + 1; /* Jacobi without eigenvalues*/
+    /* Transpose on eigenvectors- get them to the right shape (vector in columns)*/
+    eigenvectors = sort_transpose + 1; /* sort_transpose without eigenvalues*/
     transpose(eigenvectors, N);
 
     /* eigenvectors points to the start of eigenvectors, we will use only the first K vectors (first K columns) as U
-    and update eigenvectors (by renormalizing each of U’s rows) to be T */
+     * and update eigenvectors (by renormalizing each of U’s rows) to be T */
     T = set_T(eigenvectors, N, *K);
     free_memory(sort_transpose, N + 1);
-
-    /* TODO-delete this*/
-    /*if (T == NULL)
-    { */
-    /* Error occured in setting T*/
-    /*free_memory(sort_transpose, N + 1);
-    return NULL;
-}*/
 
     return T;
 }
@@ -69,10 +62,12 @@ double **sort_matrix_values(double **mat, int N)
                 max_value = mat[0][j];
             }
         }
+        /* Place the i'th eigenvalue in the i'th cell and it's correspoond eigenvectors in line number i+1 */
         sort_mat[0][i] = max_value;
         sort_mat[i + 1] = mat[max_index + 1];
         mat[0][max_index] = -1;
     }
+    /* free (mat=jacobi_output) */
     free(mat[0]);
     free(mat);
     return sort_mat;
@@ -103,12 +98,6 @@ double **set_T(double **U, int N, int K)
                 }
             }
             T[i][j] = (sum != 0) ? (U[i][j] / sqrt(sum)) : 0;
-            /*if(sum != 0)
-                T[i][j] = U[i][j] / sqrt(sum);
-            else
-                T[i][j]=0;*/
-            /* TODO: check if needs to be 0 or errro!*/
-            /*    return NULL;*/
         }
     }
     return T;
@@ -178,10 +167,13 @@ double calc_euclidean_norm(double *x, double *y, int dimension)
 double **diagonal_matrix(double **adj_mat, int N)
 {
     int i, j;
-    double sum = 0;
+    double sum;
+
     double **diag_mat = matrix_allocation(N, N);
     if (diag_mat == NULL)
         return NULL;
+    
+    sum=0;
     for (i = 0; i < N; i++)
     {
         sum = 0;
@@ -234,7 +226,7 @@ void cal_D12(double **diag_mat, int N)
 {
     int i;
     for (i = 0; i < N; i++)
-    { /* TODO check if Rami answered :https://moodle.tau.ac.il/mod/forum/discuss.php?d=128591*/
+    { /* NOT TO DELETE THIS TODO!!!! TODO check if Rami answered :https://moodle.tau.ac.il/mod/forum/discuss.php?d=128591*/
         /* (assumption) diag_mat[i][i]!=0 */
         diag_mat[i][i] = 1 / sqrt(diag_mat[i][i]);
     }
@@ -299,7 +291,85 @@ double **I_matrix(int N)
     return I;
 }
 /* ================================== Done LNORM ==================================*/
-/* ================================== JACOBI STAV ================================== */
+
+/* ================================== JACOBI ================================== */
+/* Receives symetric matrix A- size N*N
+ * Returns matrix with first row= eigenvalues, next rows are the
+ * corresponding eigenvectors (each column is a vector)
+ * If an error occurred returns NULL*/
+double **jacobi_algo(int N, double **A)
+{
+    int counter, i, j, return_value;
+    double c, s, offA, offA1; /*pivot element, s,c and offA and offA'*/
+    /* V=V x curr_P for each update of P (update on each loop), curr_P= P calculated in each loop,
+     * jacobi_result= union of eigenvalues and eigenvectors, V_to_free- in each calculate of V a new 
+     * memory is allocated so V_to_free saves previoes memory pointer*/
+    double **V, **curr_P, **jacobi_result,**V_to_free;
+    double *eigenvalues; 
+    
+    /* Memory allocations- if matrix_allocation returns NULL-
+     * an error occurred - free previous allocations and return NULL */
+    V = I_matrix(N); /* In first iteration, V = curr_P1*/
+    if (V == NULL)
+        return NULL;
+
+    curr_P = matrix_allocation(N, N);
+    if (curr_P == NULL)
+    {
+        free_memory(V, N);
+        return NULL;
+    }
+
+    eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
+    if (eigenvalues == NULL)
+    {
+        free_memory(V, N);
+        free_memory(curr_P, N);
+        return NULL;
+    }
+
+    counter = 0;
+    return_value=1;
+    offA = EPSILON_JACOBI + 1;
+    offA1 = 0;
+
+    /* Will run up to 100 iterations if it doesn't reach convergence before + in the first iteration, convergence is not relevant*/
+    while ((MAX_ITER_JACOBI > counter) && ((offA - offA1 > EPSILON_JACOBI) || (counter == 0)))
+    {
+        counter++;
+        offA = calc_off_diag(N, A);
+
+        /* Transform the matrix A to A' */
+        find_Aij(N, A, &i, &j);                   /* Finding the index of Aij - the pivot*/
+        find_c_s_t(A, i, j, &c, &s);              /* Calculating c,s with the given formulas*/
+        calc_curr_P(N, curr_P, i, j, c, s);       /* Calculating P matrix with the given formula*/
+        calc_A1(N, A, c, s, i, j, &return_value); /* update A according to formula of A', if an error occured- return_value=0,else return_value=1 */
+
+        V_to_free=V;
+        V = calc_mul(N, V, curr_P); /* V *= curr_P */
+        free_memory(V_to_free,N);
+        if (return_value == 0 || V == NULL)
+        { /* An error occured */
+            free(eigenvalues);
+            free_memory(curr_P, N);
+            return NULL;
+        }
+        offA1 = calc_off_diag(N, A);
+    }
+
+    get_eigenvalues_from_A1(eigenvalues, N, A);            /* Getting eigenvalues from A' diagonal!*/
+    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /* Putting eigenVectors and eigenVectors together*/
+
+    free_memory(V, N);
+    free_memory(curr_P, N);
+    free(eigenvalues);
+
+    return jacobi_result;
+}
+
+/* Receives symetric matrix A- size N*N, c, s, and i, j (of pivot- Aij) and a pointer to an int return_value
+ * Updates A's i and j rows and cols according to the given formula
+ * If an error occurred return_value value updates to 0- else 1*/
 void calc_A1(int N, double **A, double c, double s, int i, int j, int *return_value)
 {
     int r;
@@ -340,6 +410,8 @@ void calc_A1(int N, double **A, double c, double s, int i, int j, int *return_va
     *return_value = 1;
 }
 
+/* Receives matrix A- size N*N
+ * Returns the sum of squares of all off-diagonal elements of A*/
 double calc_off_diag(int N, double **A)
 {
     int i, j;
@@ -354,235 +426,6 @@ double calc_off_diag(int N, double **A)
         }
     }
     return off_A_squared;
-}
-
-
-/* TODO: for us- delete after!! */
-void check_jacobi(int N, int D, FILE *ifp)
-{
-    double **data_input_1, **data_output_1;
-    double **data_input_2, **data_output_2;
-    int i,j;
-    data_input_1 = matrix_allocation(N, D);
-    msg_and_exit(ERROR_TYPE, data_input_1 == NULL);
-    data_input_2 = matrix_allocation(N, D);
-    msg_and_exit(ERROR_TYPE, data_input_2 == NULL);
-
-    /* Sets the N points/symmetric matrix in data_input*/
-    set_input(ifp, data_input_1, N, D);
-    set_input(ifp, data_input_2, N, D);
-
-    /* Sets the goal's result in data_output*/
-    data_output_1 = jacobi_algo(N, data_input_1);
-    data_output_2 = jacobi_algo2(N, data_input_2);
-    for(i=0;i<N+1;i++)
-    {
-        for(j=0;j<N;j++)
-        {
-            if(data_output_1[i][j]!=data_output_2[i][j])
-            {
-                printf("ERROR!: %f != %f, -= %f\n",data_output_1[i][j],data_output_2[i][j],data_output_1[i][j]-data_output_2[i][j]);
-            }
-        }
-    }
-    printf("Done compare!!");
-    exit(0);
-}
-
-/* ================================== JACOBI(2) ================================== */
-/* Receives symetric matrix A size N*N
- * Returns matrix with first row= eigenvalues, next rows are the
- * corresponding eigenvectors (each column is a vector)
- * If an error occurred returns NULL*/
-double **jacobi_algo2(int N, double **A)
-{
-    int counter, i, j, return_value;
-    double c, s, offA, offA1;              /*pivot element, s,c*/
-    double **V, **curr_P, **jacobi_result,**V_to_free; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
-    double *eigenvalues;
-
-    /* TODO: handle case N==1*/
-
-    /* Memory allocations- if matrix_allocation returns NULL-
-     * an error occurred - free previous allocations and return NULL */
-    V = I_matrix(N); /* in the first iteration, V = curr_P1*/
-    if (V == NULL)
-        return NULL;
-
-    curr_P = matrix_allocation(N, N);
-    if (curr_P == NULL)
-    {
-        free_memory(V, N);
-        return NULL;
-    }
-
-    eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
-    if (eigenvalues == NULL)
-    {
-        free_memory(V, N);
-        free_memory(curr_P, N);
-        return NULL;
-    }
-
-    counter = 0;
-    offA = EPSILON_JACOBI + 1;
-    offA1 = 0;
-
-    /* Will run up to 100 iterations if it doesn't reach convergence before + in the first iteration, convergence is not relevant*/
-    while ((MAX_ITER_JACOBI > counter) && ((offA - offA1 > EPSILON_JACOBI) || (counter == 0)))
-    {
-        counter++;
-
-        /* Transform the matrix A to A' */
-        offA = calc_off_diag(N, A);
-        find_Aij(N, A, &i, &j);             /* Finding the index of Aij - the pivot*/
-        find_c_s_t(A, i, j, &c, &s);        /* Calculating c,s with the given formulas*/
-        calc_curr_P(N, curr_P, i, j, c, s); /* Calculating P matrix with the given formula*/
-        calc_A1(N, A, c, s, i, j, &return_value); /* update A according to formula of A' */
-
-        V_to_free=V;
-        V = calc_mul(N, V, curr_P); /* V *= curr_P */
-        free_memory(V_to_free,N);
-        if (return_value == 0 || V == NULL)
-        {
-            free(eigenvalues);
-            free_memory(curr_P, N);
-            return NULL;
-        }
-        offA1 = calc_off_diag(N, A);
-    }
-
-    get_eigenvalues_from_A1(eigenvalues, N, A);            /* Getting eigenvalues from A' diagonal!*/
-    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /* Putting eigenVectors and eigenVectors together*/
-
-    free_memory(V, N);
-    free_memory(curr_P, N);
-    free(eigenvalues);
-
-    return jacobi_result;
-}
-/* ================================== DONE JACOBI STAV ================================== */
-
-/* ================================== JACOBI ================================== */
-/* Receives symetric matrix A size N*N
- * Returns matrix with first row= eigenvalues, next rows are the
- * corresponding eigenvectors (each column is a vector)
- * If an error occurred returns NULL*/
-double **jacobi_algo(int N, double **A)
-{
-    int counter, iPointer, jPointer;
-    double cPointer, sPointer;                   /*pivot element, s,c*/
-    double **A1, **V, **curr_P, **jacobi_result; /* A' matrix, eigenVectors, *P matrix - keeps changing and (V = V x curr_P)*  */
-    double *eigenvalues;
-
-    counter = 0;
-
-    /* Memory allocations- if matrix_allocation returns NULL-
-     * an error occurred - free previous allocations and return NULL */
-    A1 = matrix_allocation(N, N);
-    if (A1 == NULL)
-        return NULL;
-
-    V = I_matrix(N); /* in the first iteration, V = curr_P1*/
-    if (V == NULL)
-    {
-        free_memory(A1, N);
-        return NULL;
-    }
-
-    curr_P = matrix_allocation(N, N);
-    if (curr_P == NULL)
-    {
-        free_memory(A1, N);
-        free_memory(V, N);
-        return NULL;
-    }
-
-    eigenvalues = malloc(N * sizeof(double)); /*len of diagonal of squared matrix (NxN) is always N*/
-    if (eigenvalues == NULL)
-    {
-        free_memory(A1, N);
-        free_memory(V, N);
-        free_memory(curr_P, N);
-        return NULL;
-    }
-
-    /* Will run up to 100 iterations if it doesn't reach convergence before + in the first iteration, convergence is not relevant*/
-    while ((MAX_ITER_JACOBI > counter) && (!check_convergence(N, A, A1) || (counter == 0)))
-    {
-        counter++;
-        /*A = A1*/
-        if (counter != 1) /*In the first iteration, A1 does not have the right values at this point*/
-            matrix_copy(N, N, A, A1);
-
-        find_Aij(N, A, &iPointer, &jPointer);                           /* Finding the index of Aij - the pivot*/
-        find_c_s_t(A, iPointer, jPointer, &cPointer, &sPointer);        /* Calculating c,s with the given formulas*/
-        calc_curr_P(N, curr_P, iPointer, jPointer, cPointer, sPointer); /* Calculating P matrix with the given formula*/
-
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 0); /* A1 = P_transpose*A*/
-        if (A1 == NULL)
-        {
-            free(eigenvalues);
-            free_memory(V, N);
-        }
-        A1 = jacobi_A_multiplication(N, A, A1, curr_P, 1); /* A1 *= P -> (equals P_transpose*A*P)*/
-        if (A1 == NULL)
-        {
-            free(eigenvalues);
-            free_memory(V, N);
-        }
-
-        V = calc_mul(N, V, curr_P); /* V *= curr_P */
-        if (V == NULL)
-        { /* It is reachable!*/
-            free(eigenvalues);
-            free_memory(A1, N);
-            free_memory(curr_P, N);
-            return NULL;
-        }
-    /* TODO for zohar- check if neeed to copy a pointer of V befor mul and free after mul!!*/
-    }
-
-    get_eigenvalues_from_A1(eigenvalues, N, A1);           /* Getting eigenvalues from A' diagonal!*/
-    jacobi_result = jacobi_eigen_merge(N, eigenvalues, V); /* Putting eigenVectors and eigenVectors together*/
-
-    /*todo check in nova too
-     * if (jacobi_result == NULL)
-    {
-        free_memory(A1, N);
-        free_memory(V, N);
-        free_memory(curr_P, N);
-        free(eigenvalues);
-    }*/
-    free_memory(A1, N);
-    free_memory(V, N);
-    free_memory(curr_P, N);
-    free(eigenvalues);
-    return jacobi_result;
-}
-
-/* Receives matrices A,A1,cuur_P, N- number of rows/columns and an int-turn:
- * Returns: case turn=0 : A1 = P_transpose X A
- *          case turn=1 : A1 = A1 X P -> (equals P_transpose X A X P)
- * If an error occurred returns NULL*/
-double **jacobi_A_multiplication(int N, double **A, double **A1, double **curr_P, int turn)
-{
-    double **A1_pointer;
-    double **mat1, **mat2;
-
-    mat1 = (turn == 0) ? curr_P : A1;
-    mat2 = (turn == 0) ? A : curr_P;
-    /* case turn=0 :curr_P will be P here, then transpose(curr_P) == P_transpose */
-    /* case turn=1 :curr_P will be Ptranspose here but transpose(Ptranspose) == P*/
-    transpose(curr_P, N);
-    A1_pointer = A1;
-    A1 = calc_mul(N, mat1, mat2);
-    free_memory(A1_pointer, N);
-    /* An error occured*/
-    if (A1 == NULL)
-        free_memory(curr_P, N);
-
-    return A1;
 }
 
 /* Receives matrix mat and N- number of rows/columns
@@ -601,27 +444,6 @@ void transpose(double **mat, int N)
             mat[j][i] = tmp;
         }
     }
-}
-
-/* Receives matrices A,A1 and N- number of rows/columns
- * Returns 1 (true) iff off(A)^2 - off(A')^2 <= epsilon */
-int check_convergence(int N, double **A, double **A1)
-{
-    int i, j;
-    double off_A_squared = 0, off_A1_squared = 0;
-
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < N; j++)
-        {
-            /*Sum square of all off-diagonal elements in the Matrix*/
-            off_A_squared += i == j ? 0 : A[i][j] * A[i][j];
-            off_A1_squared += i == j ? 0 : A1[i][j] * A1[i][j];
-        }
-    }
-    if (off_A_squared - off_A1_squared <= EPSILON_JACOBI)
-        return 1;
-    return 0;
 }
 
 /* Receives matrix A, N- number of rows/columns and a pointer to the numbers that represent i,j
@@ -666,7 +488,6 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
     if (theta < 0)
         signTheta = -1;
     t = (signTheta) / (fabs(theta) + sqrt((theta * theta) + 1));
-    /* TODO: change to pow and use c (need to check for sure it's equal!)*/
     *cPointer = (1) / (sqrt(1 + (t * t)));
     *sPointer = t / sqrt(1 + (t * t));
 }
@@ -745,7 +566,6 @@ int find_N_D(FILE *ifp, int find_who)
 {
     int count;
     char c;
-
     count = 0;
 
     while ((c = fgetc(ifp)) != EOF)
@@ -775,9 +595,7 @@ int find_N_D(FILE *ifp, int find_who)
             }
         }
     }
-
     rewind(ifp);
-
     return count;
 }
 
@@ -803,6 +621,7 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
     double curr_value;
     i = 0;
     j = 0;
+
     for (i = 0; i < num_rows; i++)
     {
         for (j = 0; j < num_cols; j++)
@@ -811,7 +630,6 @@ void set_input(FILE *ifp, double **data_input, int num_rows, int num_cols)
                 data_input[i][j] = curr_value;
             else
             {
-                /*TODO check with weird input files!!!!!!!*/
                 j--;
             }
             fgetc(ifp);
@@ -889,7 +707,7 @@ double **run_goal(enum Goal goal, double **data_input, int N, int D, int *K)
 
     if (goal == JACOBI)
     {
-        data_output = jacobi_algo2(N, data_input);
+        data_output = jacobi_algo(N, data_input);
         return data_output;
     }
 
@@ -968,7 +786,7 @@ int main(int argc, char *argv[])
     if (data_output == NULL)
     { /* An error has occurred*/
         free_memory(data_input, N);
-        msg_and_exit(ERROR_TYPE, 1); /* todo check if \n is not necessary after error message */
+        msg_and_exit(ERROR_TYPE, 1);
     }
 
     print_result(data_output, N, N, goal);
@@ -978,7 +796,6 @@ int main(int argc, char *argv[])
         free_memory(data_output, N + 1);
     else
         free_memory(data_output, N);
-
     fclose(ifp);
     exit(0);
 }
