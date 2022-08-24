@@ -341,6 +341,9 @@ double **jacobi_algo(int N, double **A)
 
         /* Transform the matrix A to A' */
         find_Aij(N, A, &i, &j);                   /* Finding the index of Aij - the pivot*/
+        if (A[i][j] == 0.0){/*todo check if 0 or 0.0 and if it's the right place (maybe after calc_V*/
+            break;
+        }
         find_c_s_t(A, i, j, &c, &s);              /* Calculating c,s with the given formulas*/
         calc_curr_P(N, curr_P, i, j, c, s);       /* Calculating P matrix with the given formula*/
         calc_A1(N, A, c, s, i, j, &return_value); /* update A according to formula of A', if an error occured- return_value=0,else return_value=1 */
