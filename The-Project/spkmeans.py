@@ -88,13 +88,11 @@ def check_input(given_input, argLen):
 ''' ========================= spk from ex 2 ========================='''
 # Recieves datapoints and K
 # Returns initial centroids chosen by kmeans++ algorithm
-def kMeans_init(K, data_points_list):
+def kMeans_init(K, data_points_array):
 
     Centroids_array = []  # Saves the centroids u1, ... , uK
     Centroids_index_array = []
 
-    #TODO check if make data_points_array as np.array!!
-    data_points_array=data_points_list
     N = len(data_points_array)
     D_array = np.array([0.0 for i in range(N+1)])# Dl=min (xl-miuj)^2 for 1<=j<i and D[N]=sum(D)
     Pr_array = np.array([0.0 for i in range(N)])# Pr_array[i] = probability of choosing x
@@ -102,7 +100,6 @@ def kMeans_init(K, data_points_list):
 
     np.random.seed(0)
 
-    # TODO: for us to remember: Added diffrently from ex2
     index=np.random.choice(Index_array)
     Centroids_index_array.append(index)
     Centroids_array.append(data_points_array[index])  # miu 1
