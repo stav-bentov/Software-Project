@@ -82,7 +82,7 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
         }
 
         /* make oldcentroids be the new ones for next iteration*/
-        updateOldCentroid(Centroids, oldCentroids, dimension, K);
+        update_old_centroids(Centroids, oldCentroids, dimension, K);
 
         counter++;
     }
@@ -140,7 +140,7 @@ int find_cluster(double **Centroids, double *Datapoint, int dimension, int K)
 }
 
 /* Receives the updated centroids and old ones- update the old centroids*/
-void updateOldCentroid(double **newCentroids, double **oldCentroids, int dimension, int K)
+void update_old_centroids(double **newCentroids, double **oldCentroids, int dimension, int K)
 {
     int i, j;
     for (i = 0; i < K; i++)

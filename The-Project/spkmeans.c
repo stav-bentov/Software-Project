@@ -226,8 +226,8 @@ void cal_D12(double **diag_mat, int N)
 {
     int i;
     for (i = 0; i < N; i++)
-    { /* NOT TO DELETE THIS TODO!!!! TODO check if Rami answered :https://moodle.tau.ac.il/mod/forum/discuss.php?d=128591*/
-        /* (assumption) diag_mat[i][i]!=0 */
+    {
+        /* (assumption) diag_mat[i][i]!=0 Rami answered :https://moodle.tau.ac.il/mod/forum/discuss.php?d=128591*/
         diag_mat[i][i] = 1 / sqrt(diag_mat[i][i]);
     }
 }
@@ -341,7 +341,7 @@ double **jacobi_algo(int N, double **A)
 
         /* Transform the matrix A to A' */
         find_Aij(N, A, &i, &j);                   /* Finding the index of Aij - the pivot*/
-        if (A[i][j] == 0.0){/*todo check if 0 or 0.0 and if it's the right place (maybe after calc_V*/
+        if (A[i][j] == 0){
             break;
         }
         find_c_s_t(A, i, j, &c, &s);              /* Calculating c,s with the given formulas*/
@@ -498,7 +498,7 @@ void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer)
 /* Receives matrix curr_P, N- number of rows/columns, i,j- the location of the pivot, and c,s
  * Updates P according to the given instructions */
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s)
-{ /* TODO it better? (just 1 loop because you go on the diagonal)*/
+{
     int k, l;
     /* P[i][i]=P[j][j]=c, P[i][j]=s, P[j][i]=-s 
      * on diagonal= 1, else=0*/
