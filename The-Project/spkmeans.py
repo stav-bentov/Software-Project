@@ -148,7 +148,6 @@ def main(argv):
     argLen = len(argv)
     K, goal = check_input(argv, argLen)
     data_points_array, N, D = get_goal_input(argv[3])
-
     if K > N:
         print("Invalid Input!")
         sys.exit()
