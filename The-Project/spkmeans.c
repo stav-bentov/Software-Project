@@ -695,8 +695,7 @@ void print_result(double **mat, int num_rows, int num_cols, enum Goal goal)
                 printf("%.4f,", mat[i][j]);
             }
         }
-        if (i != num_rows - 1)
-            printf("\n");
+        printf("\n");
     }
 }
 
