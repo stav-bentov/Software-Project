@@ -1,7 +1,3 @@
-#ifndef SOFTWARE_PROJECT_SPKMEANS_H
-#define SOFTWARE_PROJECT_SPKMEANS_H
-
-#define PY_SSIZE_T_CLEAN
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,12 +17,6 @@
 #define MAX_ITER_JACOBI 100
 #define EPSILON_KMEANS 0
 #define MAX_ITER_KMEANS 300
-#define WAM 1
-#define DDG 2
-#define LNORM 3
-#define JACOBI 4
-#define SPK 5
-#define SPK_EX2 6
 
 enum Goal
 {
@@ -68,9 +58,8 @@ void matrix_copy(int num_rows, int num_cols, double **dest_mat, double **src_mat
 void find_Aij(int N, double **A, int *i_pointer, int *j_pointer);
 void find_c_s_t(double **A, int i, int j, double *cPointer, double *sPointer);
 void calc_curr_P(int N, double **curr_P, int i, int j, double c, double s);
-void get_eigenvalues_from_A1(double *eigenvalues, int N, double **A1);
 void transpose(double **mat, int N);
-double **jacobi_eigen_merge(int N, double *eigenValues, double **eigenVectors);
+double **jacobi_eigen_merge(double **A, int N, double **eigenVectors);
 void calc_A1(int N, double **A, double c, double s, int i, int j, int *return_value);
 double calc_off_diag(int N, double **A);
 
@@ -79,4 +68,3 @@ int kMeans(int N, int K, double **Datapoints, double **Centroids, int dimension)
 int check_euclidean_norm(double **newCentroids, double **oldCentroids, int dimension, int K);
 int find_cluster(double **Centroids, double *Datapoint, int dimension, int K);
 void update_old_centroids(double **newCentroids, double **oldCentroids, int dimension, int K);
-#endif

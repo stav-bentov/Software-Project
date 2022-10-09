@@ -28,37 +28,37 @@ static PyObject *fit(PyObject *self, PyObject *args)
     }
 
     cols_allocation=D;
+    current_centroid=NULL;
+    Centroids=NULL;
+
     /* Only in spk-ex2 (when we return to fit in the second time), Datapoints need to have D+1 cols*/
-    if(goal==SPK_EX2)
+    if(goal==spk_g2)
+    {
         cols_allocation=D+1;
+        /* Only in spk-ex2: sets Centroids*/
+        Centroids = matrix_allocation(K, cols_allocation);
+        if (Centroids == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, ERROR);
+            return NULL;
+        }
+    }
 
     /* Set up Datapoints and Centroids's matrix*/
     Datapoints = matrix_allocation(N, cols_allocation);
     if (Datapoints == NULL)
     {
+        if(goal==spk_g2)
+            free_memory(Centroids,K);
         PyErr_SetString(PyExc_RuntimeError, ERROR);
         return NULL;
-    }
-
-    current_centroid=NULL;
-    Centroids=NULL;
-    /* Only in spk-ex2: sets Centroids*/
-    if(goal == SPK_EX2)
-    {
-        Centroids = matrix_allocation(K, cols_allocation);
-        if (Centroids == NULL)
-        {
-            free_memory(Datapoints, N);
-            PyErr_SetString(PyExc_RuntimeError, ERROR);
-            return NULL;
-        }
     }
     
     /* Fill matrix values as given list from python*/
     for (i = 0; i < N; i++)
     {
         current_datapoint = PyList_GetItem(Datapoints_PyObject, i);
-        if (i < K && goal == SPK_EX2)
+        if (i < K && goal == spk_g2)
             current_centroid = PyList_GetItem(Centroids_PyObject, i);
 
         /*Set up each of vector*/
@@ -66,7 +66,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         {
             current_double = PyList_GetItem(current_datapoint, j);
             Datapoints[i][j] = PyFloat_AsDouble(current_double);
-            if (i < K && goal == SPK_EX2)
+            if (i < K && goal == spk_g2)
             {
                 current_double = PyList_GetItem(current_centroid, j);
                 Centroids[i][j] = PyFloat_AsDouble(current_double);
@@ -74,7 +74,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
         }
 
         /* Only in spk-ex2: Zero in last cell [dimension]*/
-        if(goal == SPK_EX2)
+        if(goal == spk_g2)
         {
             Datapoints[i][j] = 0;
             if (i < K)
@@ -85,7 +85,7 @@ static PyObject *fit(PyObject *self, PyObject *args)
     }
 
     /* If goal is spk_ex2 (spk second run) run kMeans from ex2 else- goal is wam, ddg, lnorm or spk (first run)- use run_goal function*/
-    if (goal == SPK_EX2)
+    if (goal == spk_g2)
     {
         return_value = kMeans(N, K, Datapoints, Centroids, D);
         if (return_value == FAIL)
@@ -108,9 +108,9 @@ static PyObject *fit(PyObject *self, PyObject *args)
             PyErr_SetString(PyExc_RuntimeError, ERROR);
             return NULL;
         }
-        rows = (goal == JACOBI) ? (N + 1) : N; /*Jacobi needs N+1 rows*/
+        rows = (goal == jacobi_g) ? (N + 1) : N; /*Jacobi needs N+1 rows*/
         cols=N; /* In wam,ddg,lnorm,jacobi*/
-        if(goal==SPK)
+        if(goal==spk_g)
             cols=K; /* In spk (first run)- T's dimesnions are N*K (updated/original k) */
     }
 
